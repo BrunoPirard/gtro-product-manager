@@ -68,3 +68,5 @@ Pour la gestion des produits multi-voitures, nous avons deux options :
 
 Utiliser WooCommerce Product Bundles (plus simple mais moins flexible)
 Créer notre propre système dans le plugin (plus de travail mais plus personnalisable)
+
+Il faut récupérer la liste des voitures au total AVEC leur catégorie qui servira juste au calcul du prix (si on y arrive vu tes nombreux soucis). Pour rappel le client en front choisis la voiture, le nombre de tour supplémentaire avec un défaut à 0 (stage de base 2 tours) ensuite sa date mais optionnel peut être je choisirais plut tard et enfin le options. Pour le calcul on doit savoir la catégorie de voiture, le nombre supplémentaire entré par le client, récupérer le prix par tour, voir si une date est choisie pour voir si le premier calcul est en promo ou pas ensuite on ajoute le prix des options. Je pense que c'est clair et que je n'ai rien oublié.
