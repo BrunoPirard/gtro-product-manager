@@ -34,7 +34,7 @@ Logique de calcul des prix
 Interface de sélection côté client
 Gestion du "Je choisirai plus tard"
 
-/*gtro-product-manager/
+gtro-product-manager/
 ├── admin/
 │   ├── css/
 │   │   └── gtro-admin.css
@@ -62,7 +62,6 @@ Gestion du "Je choisirai plus tard"
 
 
 
-*/
 
 Pour la gestion des produits multi-voitures, nous avons deux options :
 
@@ -70,3 +69,22 @@ Utiliser WooCommerce Product Bundles (plus simple mais moins flexible)
 Créer notre propre système dans le plugin (plus de travail mais plus personnalisable)
 
 Il faut récupérer la liste des voitures au total AVEC leur catégorie qui servira juste au calcul du prix (si on y arrive vu tes nombreux soucis). Pour rappel le client en front choisis la voiture, le nombre de tour supplémentaire avec un défaut à 0 (stage de base 2 tours) ensuite sa date mais optionnel peut être je choisirais plut tard et enfin le options. Pour le calcul on doit savoir la catégorie de voiture, le nombre supplémentaire entré par le client, récupérer le prix par tour, voir si une date est choisie pour voir si le premier calcul est en promo ou pas ensuite on ajoute le prix des options. Je pense que c'est clair et que je n'ai rien oublié.
+
+Voici le bon ordre de calcul :
+
+Prix de base du stage
+
+Supplément selon la catégorie de la voiture (depuis la settings page)
+Catégorie 1 : pas de supplément
+Catégorie 2 : + montant défini en settings
+Catégorie 3 : + montant défini en settings
+(Nombre de tours supplémentaires × Prix par tour)
+= Sous-total avant promotion
+
+Si une date est sélectionnée et qu'elle a une promo :
+
+Appliquer la promotion (%) sur le sous-total
+= Sous-total après promotion
+
+Prix des options sélectionnées (ajoutées APRÈS la promo)
+= Prix final

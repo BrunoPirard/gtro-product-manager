@@ -1,18 +1,36 @@
+.gtro-vehicle-selection,
+.gtro-laps-selection,
 .gtro-options {
-    margin: 20px 0;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.gtro-vehicle-select {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px;
 }
 
 .gtro-option {
-    margin: 10px 0;
+    margin-bottom: 10px;
 }
 
-.gtro-option label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.quantity input[name="gtro_extra_laps"] {
+    width: 80px;
+}
+.price-details {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
+.price-details p {
+    margin: 5px 0;
+}
 
+.price-details .total {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+    font-size: 1.2em;
+}

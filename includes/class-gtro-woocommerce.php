@@ -13,7 +13,7 @@ class GTRO_WooCommerce {
         add_filter('woocommerce_add_to_cart_validation', [$this, 'validate_gtro_options'], 10, 3);
 
         add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
-        add_action('wp_head', [$this, 'add_custom_styles']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
 
         add_filter('woocommerce_add_to_cart_validation', [$this, 'validate_gtro_options'], 10, 3);
         add_filter('woocommerce_get_cart_item_from_session', [$this, 'get_cart_item_from_session'], 10, 2);
@@ -455,93 +455,92 @@ class GTRO_WooCommerce {
         return $cart_item;
     }
 
-    public function add_custom_styles() {
-        global $product;
-        $selected_group = get_post_meta($product->get_id(), '_gtro_date_group', true);
-        ?>
-        <style>
-            .gtro-vehicle-selection,
-                .gtro-laps-selection,
-                .gtro-options {
-                    margin-bottom: 20px;
-                }
-                
-                .gtro-vehicle-select {
-                    width: 100%;
-                    max-width: 300px;
-                    padding: 8px;
-                }
-                
-                .gtro-option {
-                    margin-bottom: 10px;
-                }
-                
-                .quantity input[name="gtro_extra_laps"] {
-                    width: 80px;
-                }
-        </style>
-        <script>
-        jQuery(document).ready(function($) {
-        function updatePrice() {
-            var basePrice = <?php echo wc_get_product(get_the_ID())->get_price(); ?>;
-            var totalPrice = basePrice;
-            
-            // 1. Ajuster le prix selon la catégorie du véhicule
-            var selectedVehicle = $('select[name="gtro_vehicle"]').val();
-            var vehicleCategory = $('select[name="gtro_vehicle"] option:selected').data('category');
-            if (vehicleCategory) {
-                switch(vehicleCategory) {
-                    case '2':
-                        totalPrice += 50;
-                        break;
-                    case '3':
-                        totalPrice += 100;
-                        break;
+    /**
+     * Récupère les dates et leurs promotions associées pour un produit
+     *
+     * @param int $product_id ID du produit
+     * @return array Tableau des dates avec leurs promotions
+     */
+    private function get_dates_with_promos($product_id) {
+        $dates_with_promos = array();
+        
+        // Récupérer les dates et promos depuis la metabox
+        $dates = get_post_meta($product_id, '_gtro_dates', true);
+        
+        if (!empty($dates) && is_array($dates)) {
+            foreach ($dates as $date) {
+                if (!empty($date['date']) && isset($date['promo'])) {
+                    $dates_with_promos[] = array(
+                        'date' => $date['date'],
+                        'promo' => floatval($date['promo'])
+                    );
                 }
             }
+        }
+        
+        return $dates_with_promos;
+    }
 
-            // 2. Ajouter le prix des tours supplémentaires
-            var extraLaps = parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
-            var pricePerLap = <?php echo get_option('gtro_price_per_lap', 50); ?>;
-            totalPrice += (extraLaps * pricePerLap);
+    public function enqueue_scripts() {
+        if (!is_product()) {
+            return;
+        }
 
-            // 3. Appliquer la promotion de la date si elle existe
-            var selectedDate = $('select[name="gtro_date"]').val();
-            <?php
+        $plugin_dir = plugin_dir_url(dirname(__FILE__));
+        wp_enqueue_script('gtro-public', $plugin_dir . 'public/js/gtro-public.js', array('jquery'), '1.0.0', true);
+        wp_enqueue_style('gtro-public', $plugin_dir . 'public/css/gtro-public.css', array(), '1.0.0', 'all');
+
+        $product_id = get_the_ID();
+        $product = wc_get_product($product_id);
+
+        if (!$product) {
+            return;
+        }
+
+        // Récupérer les suppléments de catégorie depuis les options
+        $category_supplements = array(
+            'cat1' => floatval(get_option('gtro_category_1_supplement', 0)),
+            'cat2' => floatval(get_option('gtro_category_2_supplement', 50)), // valeur par défaut 50
+            'cat3' => floatval(get_option('gtro_category_3_supplement', 100)) // valeur par défaut 100
+        );
+
+        // Récupérer les dates et promos
+        $selected_group = get_post_meta($product_id, '_gtro_date_group', true);
+        $dates_with_promos = array();
+        if (!empty($selected_group)) {
             $dates = rwmb_meta('dates_' . sanitize_title($selected_group), ['object_type' => 'setting'], 'gtro_options');
-            echo 'var datesPromo = ' . json_encode($dates) . ';';
-            ?>
-            if (selectedDate && datesPromo) {
-                for (var i = 0; i < datesPromo.length; i++) {
-                    if (datesPromo[i].date === selectedDate && datesPromo[i].promo > 0) {
-                        var discount = totalPrice * (datesPromo[i].promo / 100);
-                        totalPrice -= discount;
-                        break;
+            if (!empty($dates)) {
+                foreach ($dates as $date) {
+                    if (isset($date['date']) && isset($date['promo'])) {
+                        $dates_with_promos[] = array(
+                            'date' => $date['date'],
+                            'promo' => floatval($date['promo'])
+                        );
                     }
                 }
             }
-
-            // 4. Ajouter le prix des options sélectionnées
-            $('input[name="gtro_options[]"]:checked').each(function() {
-                var optionPrice = parseFloat($(this).closest('label').find('.option-price').data('price')) || 0;
-                totalPrice += optionPrice;
-            });
-
-            // Mettre à jour l'affichage du prix
-            $('.price .amount').html(formatPrice(totalPrice));
         }
 
-        function formatPrice(price) {
-            return price.toLocaleString('fr-FR', {
-                style: 'currency',
-                currency: 'EUR'
-            });
+        // Récupérer les options disponibles
+        $available_options = array();
+        $options = rwmb_meta('options_supplementaires', ['object_type' => 'setting'], 'gtro_options');
+        if (!empty($options)) {
+            foreach ($options as $option) {
+                if (isset($option['options']) && isset($option['prix_options'])) {
+                    $option_id = sanitize_title($option['options']);
+                    $available_options[$option_id] = floatval($option['prix_options']);
+                }
+            }
         }
 
-        // Écouter les changements sur tous les champs
-        $('select[name="gtro_vehicle"], input[name="gtro_extra_laps"], select[name="gtro_date"], input[name="gtro_options[]"]').on('change', updatePrice);
-    });
-    </script>
-    <?php
+        wp_localize_script('gtro-public', 'gtroData', array(
+            'basePrice' => floatval($product->get_price()),
+            'pricePerLap' => floatval(get_option('gtro_price_per_lap', 50)),
+            'categorySupplements' => $category_supplements,
+            'datesPromo' => empty($dates_with_promos) ? array() : $dates_with_promos,
+            'availableOptions' => empty($available_options) ? array() : $available_options,
+            'showPriceDetails' => true
+        ));
     }
+
 }
