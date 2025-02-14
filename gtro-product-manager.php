@@ -42,41 +42,12 @@ register_deactivation_hook(__FILE__, 'deactivate_gtro');
 
 require GTRO_PLUGIN_DIR . 'includes/class-gtro.php';
 
+
 function run_gtro() {
-    $plugin = new GTRO_Plugin\GTRO_Main();
-    $plugin->run();
+    static $plugin = null;
+    if ($plugin === null) {
+        $plugin = new GTRO_Plugin\GTRO_Main();
+    }
+    return $plugin;
 }
-run_gtro();
-
-
-
-
-/*gtro-product-manager/
-├── admin/
-│   ├── css/
-│   │   └── gtro-admin.css
-│   ├── js/
-│   │   └── gtro-admin.js
-│   └── class-gtro-admin.php
-├── includes/
-│   ├── class-gtro-activator.php
-│   ├── class-gtro-deactivator.php
-│   ├── class-gtro-i18n.php
-│   ├── class-gtro-loader.php
-│   └── class-gtro-metabox.php
-├── languages/
-│   └── gtro-product-manager.pot
-├── public/
-│   ├── css/
-│   │   └── gtro-public.css
-│   ├── js/
-│   │   └── gtro-public.js
-│   └── class-gtro-public.php
-├── index.php
-├── uninstall.php
-├── README.txt
-└── gtro-product-manager.php
-
-
-
-*/
+add_action('plugins_loaded', 'run_gtro');

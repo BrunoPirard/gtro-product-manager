@@ -33,3 +33,38 @@ Gestion de la sauvegarde des données
 Logique de calcul des prix
 Interface de sélection côté client
 Gestion du "Je choisirai plus tard"
+
+/*gtro-product-manager/
+├── admin/
+│   ├── css/
+│   │   └── gtro-admin.css
+│   ├── js/
+│   │   └── gtro-admin.js
+│   └── class-gtro-admin.php
+├── includes/
+│   ├── class-gtro-activator.php
+│   ├── class-gtro-deactivator.php
+│   ├── class-gtro-i18n.php
+│   ├── class-gtro-loader.php
+│   └── class-gtro-metabox.php
+├── languages/
+│   └── gtro-product-manager.pot
+├── public/
+│   ├── css/
+│   │   └── gtro-public.css
+│   ├── js/
+│   │   └── gtro-public.js
+│   └── class-gtro-public.php
+├── index.php
+├── uninstall.php
+├── README.txt
+└── gtro-product-manager.php
+
+
+
+*/
+
+Pour la gestion des produits multi-voitures, nous avons deux options :
+
+Utiliser WooCommerce Product Bundles (plus simple mais moins flexible)
+Créer notre propre système dans le plugin (plus de travail mais plus personnalisable)

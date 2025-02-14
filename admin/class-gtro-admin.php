@@ -74,28 +74,11 @@ if (!class_exists('GTRO_Plugin\GTRO_Admin')) {
          */
         public function enqueue_scripts() {
             wp_enqueue_script(
-                $this->plugin_name,
+                'gtro-admin-script',
                 GTRO_PLUGIN_URL . 'admin/js/gtro-admin.js',
                 array('jquery'),
                 $this->version,
-                false
-            );
-        }
-
-        /**
-         * Add an options page under the Settings submenu
-         *
-         * @since  1.0.0
-         */
-        public function add_plugin_admin_menu() {
-            add_menu_page(
-                __('GTRO Products', 'gtro-product-manager'),
-                __('GTRO Products', 'gtro-product-manager'),
-                'manage_options',
-                $this->plugin_name,
-                array($this, 'display_plugin_setup_page'),
-                'dashicons-car',
-                56
+                true
             );
         }
 
@@ -113,15 +96,6 @@ if (!class_exists('GTRO_Plugin\GTRO_Admin')) {
         }
 
         /**
-         * Render the settings page for this plugin.
-         *
-         * @since    1.0.0
-         */
-        public function display_plugin_setup_page() {
-            include_once GTRO_PLUGIN_DIR . 'admin/partials/gtro-admin-display.php';
-        }
-
-        /**
          * Check if WooCommerce is active
          *
          * @since    1.0.0
@@ -136,6 +110,38 @@ if (!class_exists('GTRO_Plugin\GTRO_Admin')) {
                     <?php
                 });
             }
+        }
+
+        /**
+         * Add options page to admin menu
+         *
+         * @since    1.0.0
+         */
+        public function add_plugin_admin_menu() {
+            // Nous n'avons plus besoin d'ajouter un menu car Meta Box gère déjà cela
+            // via la classe GTRO_Settings
+            return;
+            
+            /* Si vous voulez quand même ajouter un menu personnalisé, décommentez ceci :
+            add_menu_page(
+                __('GTRO Settings', 'gtro-product-manager'),
+                __('GTRO', 'gtro-product-manager'),
+                'manage_options',
+                $this->plugin_name,
+                array($this, 'display_plugin_setup_page'),
+                'dashicons-calendar-alt',
+                6
+            );
+            */
+        }
+
+        /**
+         * Render the settings page for this plugin.
+         *
+         * @since    1.0.0
+         */
+        public function display_plugin_setup_page() {
+            include_once('partials/gtro-admin-display.php');
         }
 
         /**
