@@ -1,5 +1,5 @@
 .custom-calendar-year {
-    max-width: 1200px;
+    /*max-width: 1200px;*/
     margin: 0 auto;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -24,7 +24,7 @@
 .color-dot {
     width: 12px;
     height: 12px;
-    border-radius: 50%;
+    /*border-radius: 50%;*/
     display: inline-block;
 }
 
@@ -73,12 +73,12 @@
 }
 
 .event-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    /*border-radius: 50%;*/
     position: absolute;
     bottom: 2px;
-    left: 50%;
+    left: 70%;
     transform: translateX(-50%);
 }
 

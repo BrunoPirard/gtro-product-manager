@@ -17,6 +17,14 @@
 .quantity input[name="gtro_extra_laps"] {
     width: 80px;
 }
+
+.base-price{
+    margin-bottom:2px;
+}
+.price-note{
+    display: none;
+}
+
 .price-details {
     margin: 20px 0;
     padding: 15px;
@@ -32,5 +40,9 @@
     margin-top: 15px;
     padding-top: 10px;
     border-top: 1px solid #ddd;
-    font-size: 1.2em;
+    font-size: 1em;
+}
+
+.gtro-total-price {
+    display: none;
 }

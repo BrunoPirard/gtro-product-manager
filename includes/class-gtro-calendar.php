@@ -15,8 +15,8 @@ class GTRO_Calendar {
             'name' => 'Monoplace'
         ),
         'gt' => array(
-            'meta_key' => 'dates_gt', // Changé pour correspondre à l'ID dans settings
-            'settings_page' => 'gtro_options', // Changé pour utiliser option_name des settings
+            'meta_key' => 'dates_gt',
+            'settings_page' => 'gtro_options',
             'color' => '#4ecdc4',
             'name' => 'GT'
         )
@@ -41,7 +41,7 @@ class GTRO_Calendar {
         add_shortcode('display_calendar', array($this, 'calendar_shortcode'));
         
         // Enregistrer les assets
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_styles')); // Gardé le nom original
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'));
     }
 
     /**
@@ -133,7 +133,7 @@ class GTRO_Calendar {
                                 'name' => $group_info['name'] . ($promo_value > 0 ? sprintf(' (Promo %d%%)', $promo_value) : '')
                             );
                             
-                            error_log("Date ajoutée pour $group_key: $date avec promo: $promo_value");
+                            //error_log("Date ajoutée pour $group_key: $date avec promo: $promo_value");
                         }
                     }
                 }
