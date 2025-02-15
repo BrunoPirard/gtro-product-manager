@@ -121,11 +121,6 @@ class GTRO_Settings {
                             'type' => 'text',
                         ],
                         [
-                            'name' => __('Prix CAT', 'gtro-product-manager'),
-                            'id'   => 'prix_cat',
-                            'type' => 'number',
-                        ],
-                        [
                             'name' => __('Image voiture', 'gtro-product-manager'),
                             'id'   => 'image_voiture',
                             'type' => 'single_image',
