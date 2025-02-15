@@ -392,6 +392,39 @@ class GTRO_WooCommerce {
 	}
 
 	/**
+	 * Affiche les détails du prix avant le formulaire d'ajout au panier.
+	 *
+	 * Cette méthode est appelée par le hook 'woocommerce_before_add_to_cart_form'
+	 * et affiche une zone pour les détails du prix qui sera mise à jour
+	 * dynamiquement via JavaScript.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function display_price_details() {
+		global $product;
+		
+		// Vérifier si c'est un produit GTRO
+		$date_group = get_post_meta($product->get_id(), '_gtro_date_group', true);
+		if (empty($date_group)) {
+			return;
+		}
+
+		// Afficher le conteneur pour les détails du prix
+		echo '<div id="gtro-price-details" class="gtro-price-details">';
+		echo '<h3>' . esc_html__('Détails du prix', 'gtro-product-manager') . '</h3>';
+		echo '<div class="price-breakdown">';
+		echo '<p class="base-price-line">' . esc_html__('Prix de base:', 'gtro-product-manager') . ' <span></span></p>';
+		echo '<p class="vehicle-supplement-line" style="display:none;">' . esc_html__('Supplément véhicule:', 'gtro-product-manager') . ' <span></span></p>';
+		echo '<p class="extra-laps-line" style="display:none;">' . esc_html__('Tours supplémentaires:', 'gtro-product-manager') . ' <span></span></p>';
+		echo '<p class="promo-line" style="display:none;">' . esc_html__('Promotion:', 'gtro-product-manager') . ' <span></span></p>';
+		echo '<p class="options-line" style="display:none;">' . esc_html__('Options:', 'gtro-product-manager') . ' <span></span></p>';
+		echo '<p class="total-price-line">' . esc_html__('Prix total:', 'gtro-product-manager') . ' <span></span></p>';
+		echo '</div>';
+		echo '</div>';
+	}
+
+	/**
 	 * Calcule le prix total d'un stage
 	 *
 	 * 1. Ajuste le prix en fonction de la catégorie du véhicule
@@ -576,7 +609,8 @@ class GTRO_WooCommerce {
 	 *                          valides.
 	 * @param  int  $product_id L'ID du produit.
 	 * @param  int  $quantity   La quantité
-	 *                          du produit.
+	 *                          du
+ produit.
 	 * @return bool Si les données sont valides.
 	 */
 	public function validate_gtro_options( $passed, $product_id, $quantity ) {
