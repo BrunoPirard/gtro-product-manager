@@ -30,7 +30,11 @@ jQuery(document).ready(function ($) {
         // Tours supplémentaires
         const extraLaps =
             parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
-        if (extraLaps > 0 && gtroData.pricePerLap) {
+        if (
+            extraLaps > 0 &&
+            gtroData.pricePerLap &&
+            extraLaps <= gtroData.maxTours
+        ) {
             const lapsPrice = extraLaps * parseFloat(gtroData.pricePerLap);
             totalPrice += lapsPrice;
             console.log("Added extra laps price:", lapsPrice);

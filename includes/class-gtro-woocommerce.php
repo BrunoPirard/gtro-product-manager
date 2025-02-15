@@ -270,13 +270,15 @@ class GTRO_WooCommerce {
         echo '</div>';
 
         // 3. Tours supplémentaires
-        // Récupérer le nombre max de tours
-        $max_tours = get_post_meta($product->get_id(), '_gtro_max_tours', true);
-        //error_log('Nombre max de tours : ' . $max_tours);
-        echo '<div class="gtro-extra-laps">';
-        echo '<h3>' . __('Tours supplémentaires', 'gtro-product-manager') . '</h3>';
-        echo '<input type="number" name="gtro_extra_laps" value="0" min="0" max="10">';
-        echo '</div>';
+        $max_tours = intval(get_post_meta($product->get_id(), '_gtro_max_tours', true));
+
+        // N'afficher la section que si max_tours > 0
+        if ($max_tours > 0) {
+            echo '<div class="gtro-extra-laps">';
+            echo '<h3>' . __('Tours supplémentaires', 'gtro-product-manager') . '</h3>';
+            echo '<input type="number" name="gtro_extra_laps" value="0" min="0" max="' . esc_attr($max_tours) . '">';
+            echo '</div>';
+        }
 
         // 4. Sélecteur de dates
         // Récupérer le groupe de dates sélectionné pour ce produit
@@ -683,7 +685,9 @@ class GTRO_WooCommerce {
             'categorySupplements' => $category_supplements,
             'datesPromo' => empty($dates_with_promos) ? array() : $dates_with_promos,
             'availableOptions' => empty($available_options) ? array() : $available_options,
-            'showPriceDetails' => true
+            'showPriceDetails' => true,
+            'maxTours' => intval(get_post_meta($product_id, '_gtro_max_tours', true)) // Ajout du max tours
         ));
+
     }
 }
