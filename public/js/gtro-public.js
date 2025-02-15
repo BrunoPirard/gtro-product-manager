@@ -2,45 +2,52 @@ jQuery(document).ready(function ($) {
     console.log("GTRO Data loaded:", gtroData);
 
     function updatePrice() {
-        // Prix de base
+        // Prix de base du produit
         let totalPrice = parseFloat(gtroData.basePrice);
         console.log("Base price:", totalPrice);
 
-        // Supplément catégorie
+        // Récupérer la voiture sélectionnée
         const selectedVehicle = $(
             'select[name="gtro_vehicle"] option:selected'
         );
-        const category = selectedVehicle.data("category");
-        console.log("Selected category:", category);
-        console.log("Category supplements:", gtroData.categorySupplements);
-        console.log(
-            "Supplement for category:",
-            gtroData.categorySupplements[category]
-        );
+        const vehicleValue = selectedVehicle.val();
 
-        if (category && gtroData.categorySupplements[category]) {
-            const categorySupp = parseFloat(
-                gtroData.categorySupplements[category]
+        // Variables pour le détail des prix
+        let vehicleSupplementBase = 0;
+        let extraLapsPrice = 0;
+        let selectedCategory = "";
+
+        // Ajouter le supplément de base de la voiture
+        if (vehicleValue && gtroData.vehiclesData[vehicleValue]) {
+            const vehicleData = gtroData.vehiclesData[vehicleValue];
+            vehicleSupplementBase = vehicleData.supplement_base;
+            totalPrice += vehicleSupplementBase;
+            selectedCategory = vehicleData.categorie;
+            console.log(
+                "Added vehicle base supplement:",
+                vehicleSupplementBase
             );
-            totalPrice += categorySupp;
-            console.log("Added category supplement:", categorySupp);
-            console.log("New total after category:", totalPrice);
+
+            // Tours supplémentaires (prix selon la catégorie de la voiture)
+            const extraLaps =
+                parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
+            if (
+                extraLaps > 0 &&
+                gtroData.categoryPrices[vehicleData.categorie]
+            ) {
+                const pricePerLap =
+                    gtroData.categoryPrices[vehicleData.categorie];
+                extraLapsPrice = extraLaps * pricePerLap;
+                totalPrice += extraLapsPrice;
+                console.log("Added extra laps price:", extraLapsPrice);
+            }
         }
 
-        // Tours supplémentaires
-        const extraLaps =
-            parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
-        if (
-            extraLaps > 0 &&
-            gtroData.pricePerLap &&
-            extraLaps <= gtroData.maxTours
-        ) {
-            const lapsPrice = extraLaps * parseFloat(gtroData.pricePerLap);
-            totalPrice += lapsPrice;
-            console.log("Added extra laps price:", lapsPrice);
-        }
+        // Sous-total avant promotion
+        const subtotalBeforePromo = totalPrice;
 
         // Promotion sur date
+        let promoAmount = 0;
         const selectedDate = $('select[name="gtro_date"]').val();
         if (
             selectedDate &&
@@ -51,24 +58,26 @@ jQuery(document).ready(function ($) {
                 (d) => d.date === selectedDate
             );
             if (datePromo && datePromo.promo > 0) {
-                const discount = totalPrice * (datePromo.promo / 100);
-                totalPrice -= discount;
-                console.log("Applied discount:", discount);
+                promoAmount = totalPrice * (datePromo.promo / 100);
+                totalPrice -= promoAmount;
+                console.log("Applied discount:", promoAmount);
             }
         }
 
         // Options supplémentaires
+        const optionsDetails = [];
         if (gtroData.availableOptions) {
             $('input[name="gtro_options[]"]:checked').each(function () {
                 const optionId = $(this).val();
                 if (gtroData.availableOptions[optionId]) {
-                    totalPrice += parseFloat(
+                    const optionPrice = parseFloat(
                         gtroData.availableOptions[optionId]
                     );
-                    console.log(
-                        "Added option price:",
-                        gtroData.availableOptions[optionId]
-                    );
+                    totalPrice += optionPrice;
+                    optionsDetails.push({
+                        label: $(this).next("label").text(),
+                        price: optionPrice,
+                    });
                 }
             });
         }
@@ -76,10 +85,18 @@ jQuery(document).ready(function ($) {
         console.log("Final total:", totalPrice);
 
         // Mettre à jour tous les affichages de prix
-        updatePriceDisplays(totalPrice);
+        updatePriceDisplays(totalPrice, {
+            basePrice: gtroData.basePrice,
+            vehicleSupplementBase,
+            selectedCategory,
+            extraLapsPrice,
+            subtotalBeforePromo,
+            promoAmount,
+            optionsDetails,
+        });
     }
 
-    function updatePriceDisplays(price) {
+    function updatePriceDisplays(price, details) {
         const formattedPrice = formatPrice(price);
 
         // Mettre à jour le prix total GTRO
@@ -91,90 +108,70 @@ jQuery(document).ready(function ($) {
 
         // Si on utilise les détails de prix
         if (gtroData.showPriceDetails) {
-            updatePriceDetails(price);
+            updatePriceDetails(price, details);
         }
     }
 
-    function updatePriceDetails(finalPrice) {
-        const details = [];
+    function updatePriceDetails(finalPrice, details) {
+        const priceDetails = [];
 
-        // Prix de base
-        details.push(
-            `<p>Prix de base: ${formatPrice(
-                parseFloat(gtroData.basePrice)
+        // Prix de base (basePrice + supplement)
+        const baseWithSupplement =
+            parseFloat(details.basePrice) +
+            parseFloat(details.vehicleSupplementBase);
+        priceDetails.push(
+            `<p class="base-price">Prix de base: ${formatPrice(
+                baseWithSupplement
             )}</p>`
         );
 
-        // Supplément catégorie
-        const selectedVehicle = $(
-            'select[name="gtro_vehicle"] option:selected'
-        );
-        const category = selectedVehicle.data("category");
-        if (category && gtroData.categorySupplements[category]) {
-            const suppPrice = parseFloat(
-                gtroData.categorySupplements[category]
-            );
-            if (suppPrice > 0) {
-                details.push(
-                    `<p>Supplément catégorie ${category}: +${formatPrice(
-                        suppPrice
-                    )}</p>`
-                );
-            }
-        }
-
-        // Tours supplémentaires
+        // Tours supplémentaires (toujours afficher, même à 0)
         const extraLaps =
             parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
-        if (extraLaps > 0) {
-            const lapsPrice = extraLaps * parseFloat(gtroData.pricePerLap);
-            details.push(
-                `<p>Tours supplémentaires (${extraLaps}): +${formatPrice(
-                    lapsPrice
-                )}</p>`
-            );
-        }
+        const extraLapsPrice = extraLaps > 0 ? details.extraLapsPrice : 0;
+        priceDetails.push(
+            `<p class="extra-laps">Tours supplémentaires (${extraLaps}): +${formatPrice(
+                extraLapsPrice
+            )}</p>`
+        );
 
-        // Sous-total avant remise
-        const subtotal =
-            parseFloat(gtroData.basePrice) +
-            (category
-                ? parseFloat(gtroData.categorySupplements[category] || 0)
-                : 0) +
-            extraLaps * parseFloat(gtroData.pricePerLap);
-        details.push(`<p>Sous-total: ${formatPrice(subtotal)}</p>`);
+        // Options supplémentaires (toujours afficher, même à 0)
+        const optionsTotal = details.optionsDetails.reduce(
+            (sum, option) => sum + option.price,
+            0
+        );
+        priceDetails.push(
+            `<p class="options-total">Options supplémentaires: +${formatPrice(
+                optionsTotal
+            )}</p>`
+        );
 
-        // Promotion
+        // Sous-total
+        const subtotal = baseWithSupplement + extraLapsPrice + optionsTotal;
+        priceDetails.push(
+            `<p class="subtotal">Sous-total: ${formatPrice(subtotal)}</p>`
+        );
+
+        // Ligne pour la promotion (invisible si pas de promo)
+        const promoAmount = details.promoAmount || 0;
         const selectedDate = $('select[name="gtro_date"]').val();
-        if (selectedDate && gtroData.datesPromo.length > 0) {
-            const datePromo = gtroData.datesPromo.find(
-                (d) => d.date === selectedDate
-            );
-            if (datePromo && datePromo.promo > 0) {
-                const discount = subtotal * (datePromo.promo / 100);
-                details.push(
-                    `<p>Promotion (-${datePromo.promo}%): -${formatPrice(
-                        discount
-                    )}</p>`
-                );
-            }
-        }
+        const datePromo =
+            selectedDate && gtroData.datesPromo
+                ? gtroData.datesPromo.find((d) => d.date === selectedDate)
+                : null;
 
-        // Options supplémentaires
-        $('input[name="gtro_options[]"]:checked').each(function () {
-            const optionId = $(this).val();
-            const optionLabel = $(this).next("label").text();
-            if (gtroData.availableOptions[optionId]) {
-                details.push(
-                    `<p>${optionLabel}: +${formatPrice(
-                        parseFloat(gtroData.availableOptions[optionId])
-                    )}</p>`
-                );
-            }
-        });
+        if (datePromo && datePromo.promo > 0) {
+            priceDetails.push(
+                `<p class="promo">Promotion (-${
+                    datePromo.promo
+                }%): -${formatPrice(promoAmount)}</p>`
+            );
+        } else {
+            priceDetails.push(`<p class="promo invisible">&nbsp;</p>`);
+        }
 
         // Total final
-        details.push(
+        priceDetails.push(
             `<p class="total"><strong>Total: ${formatPrice(
                 finalPrice
             )}</strong></p>`
@@ -183,7 +180,7 @@ jQuery(document).ready(function ($) {
         // Mettre à jour l'affichage des détails
         $(".gtro-price-details").html(`
             <div class="price-details">
-                ${details.join("")}
+                ${priceDetails.join("")}
             </div>
         `);
     }

@@ -175,6 +175,11 @@ class GTRO_Settings {
                             'type' => 'single_image',
                         ],
                         [
+                            'name' => __('Supplément base', 'gtro-product-manager'),
+                            'id'   => 'supplement_base',
+                            'type' => 'number',
+                        ],
+                        [
                             'name' => __('Catégorie', 'gtro-product-manager'),
                             'id'   => 'categorie',
                             'type' => 'select',

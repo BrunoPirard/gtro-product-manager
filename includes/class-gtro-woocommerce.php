@@ -643,12 +643,26 @@ class GTRO_WooCommerce {
             return;
         }
 
-        // Récupérer les suppléments de catégorie depuis les options
-        $category_supplements = array(
-            'cat1' => floatval(get_option('gtro_category_1_supplement', 0)),
-            'cat2' => floatval(get_option('gtro_category_2_supplement', 50)), // valeur par défaut 50
-            'cat3' => floatval(get_option('gtro_category_3_supplement', 100)) // valeur par défaut 100
-        );
+        // Récupérer les voitures avec leurs suppléments de base et catégories
+        $available_voitures = rwmb_meta('voitures_gtro', ['object_type' => 'setting'], 'gtro_options');
+        $vehicles_data = array();
+        foreach ($available_voitures as $voiture) {
+            if (isset($voiture['modeles']) && isset($voiture['supplement_base']) && isset($voiture['categorie'])) {
+                $vehicles_data[sanitize_title($voiture['modeles'])] = array(
+                    'supplement_base' => floatval($voiture['supplement_base']),
+                    'categorie' => $voiture['categorie']
+                );
+            }
+        }
+
+        // Récupérer les prix par tours pour chaque catégorie
+        $prix_categories = rwmb_meta('prix_categories', ['object_type' => 'setting'], 'gtro_options');
+        $category_prices = array();
+        foreach ($prix_categories as $cat) {
+            if (isset($cat['categorie']) && isset($cat['prix_tour_sup'])) {
+                $category_prices[$cat['categorie']] = floatval($cat['prix_tour_sup']);
+            }
+        }
 
         // Récupérer les dates et promos
         $selected_group = get_post_meta($product_id, '_gtro_date_group', true);
@@ -681,13 +695,12 @@ class GTRO_WooCommerce {
 
         wp_localize_script('gtro-public', 'gtroData', array(
             'basePrice' => floatval($product->get_price()),
-            'pricePerLap' => floatval(get_option('gtro_price_per_lap', 50)),
-            'categorySupplements' => $category_supplements,
+            'vehiclesData' => $vehicles_data,
+            'categoryPrices' => $category_prices,
             'datesPromo' => empty($dates_with_promos) ? array() : $dates_with_promos,
             'availableOptions' => empty($available_options) ? array() : $available_options,
             'showPriceDetails' => true,
-            'maxTours' => intval(get_post_meta($product_id, '_gtro_max_tours', true)) // Ajout du max tours
+            'maxTours' => intval(get_post_meta($product_id, '_gtro_max_tours', true))
         ));
-
     }
 }
