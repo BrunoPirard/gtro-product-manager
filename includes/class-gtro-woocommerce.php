@@ -3,8 +3,6 @@ namespace GTRO_Plugin;
 
 class GTRO_WooCommerce {
 
-
-
 	/**
 	 * Check if Product Addons for WooCommerce is active
 	 *
@@ -22,28 +20,27 @@ class GTRO_WooCommerce {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-		add_action( 'woocommerce_product_data_tabs', array( $this, 'add_gtro_product_tab' ) );
-		add_action( 'woocommerce_product_data_panels', array( $this, 'add_gtro_product_panel' ) );
-		add_action( 'woocommerce_process_product_meta', array( $this, 'save_gtro_product_options' ) );
-
+		add_action('woocommerce_product_data_tabs', [$this, 'add_gtro_product_tab']);
+		add_action('woocommerce_product_data_panels', [$this, 'add_gtro_product_panel']);
+		add_action('woocommerce_process_product_meta', [$this, 'save_gtro_product_options']);
+		add_action('woocommerce_before_add_to_cart_form', [$this, 'display_price_details'], 5);
+		
 		// Ajuster la priorité des hooks en fonction de Product Add-ons
 		if ( $this->is_product_addons_active() ) {
-			add_action( 'woocommerce_before_add_to_cart_form', array( $this, 'display_price_details' ), 5 );
-			// Optionnel : désactiver l'affichage automatique des totaux d'add-ons
-			// add_filter('pewc_show_totals', '__return_false');
+			add_action('woocommerce_before_add_to_cart_button', [$this, 'display_gtro_options'], 5);
 		} else {
-			add_action( 'woocommerce_before_add_to_cart_form', array( $this, 'display_price_details' ), 10 );
+			add_action('woocommerce_before_add_to_cart_button', [$this, 'display_gtro_options'], 10);
 		}
 
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
 
-		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'add_gtro_options_to_cart' ), 10, 3 );
-		add_filter( 'woocommerce_get_cart_item_from_session', array( $this, 'get_cart_item_from_session' ), 10, 2 );
-		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_gtro_options' ), 10, 3 );
-		add_filter( 'woocommerce_get_price_html', array( $this, 'modify_price_display' ), 10, 2 );
-		add_filter( 'woocommerce_calculate_totals', array( $this, 'calculate_totals' ), 10, 1 );
+		add_filter('woocommerce_add_cart_item_data', [$this, 'add_gtro_options_to_cart'], 10, 3);
+		add_filter('woocommerce_get_cart_item_from_session', [$this, 'get_cart_item_from_session'], 10, 2);
+		add_filter('woocommerce_add_to_cart_validation', [$this, 'validate_gtro_options'], 10, 3);
+		add_filter('woocommerce_get_price_html', [$this, 'modify_price_display'], 10, 2);
+		add_filter('woocommerce_calculate_totals', [$this, 'calculate_totals'], 10, 1);
 
-		// add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
+		//add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
 		// Debug hook
 		// add_action('admin_init', [$this, 'debug_meta_box_data']);
 	}
