@@ -1,19 +1,23 @@
 jQuery(document).ready(function ($) {
     // Fonction pour initialiser le calendrier
     function initCalendar() {
-        $(".custom-calendar").each(function () {
+        // Changé le sélecteur pour correspondre à votre HTML
+        $(".custom-calendar-year").each(function () {
             // Ajouter des interactions au survol
-            $(".calendar-cell").hover(
-                function () {
-                    $(this).addClass("hover");
-                },
-                function () {
-                    $(this).removeClass("hover");
-                }
-            );
+            $(this)
+                .find(".calendar-cell")
+                .hover(
+                    function () {
+                        $(this).addClass("hover");
+                    },
+                    function () {
+                        $(this).removeClass("hover");
+                    }
+                );
 
             // Ajouter des tooltips améliorés pour les événements
-            $(".event-dot")
+            $(this)
+                .find(".event-dot")
                 .hover(
                     function () {
                         var title = $(this).attr("title");
