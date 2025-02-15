@@ -4,6 +4,16 @@ namespace GTRO_Plugin;
 class GTRO_Settings {
     private $meta_boxes = [];
 
+    /**
+     * Enregistre les champs de réglage pour la page de paramètres.
+     *
+     * Les champs sont enregistrés en utilisant le hook "rwmb_meta_boxes"
+     * et la page de paramètres est enregistrée en utilisant le hook
+     * "mb_settings_pages". On ajoute également un hook pour gérer le
+     * cas où un utilisateur ajoute un nouveau groupe de dates.
+     *
+     * @since 1.0.0
+     */
     public function __construct() {
         // S'assurer que le hook n'est ajouté qu'une seule fois
         add_filter('rwmb_meta_boxes', [$this, 'register_settings_fields'], 10, 1);
@@ -11,6 +21,18 @@ class GTRO_Settings {
         add_action('rwmb_after_save_post', [$this, 'handle_new_group'], 10, 2);
     }
 
+    /**
+     * Handle the creation of a new date group after saving post data.
+     *
+     * This function checks if a new date group has been submitted via the
+     * 'nouveau_groupe' POST field. If so, it sanitizes the input and adds
+     * it to the existing date groups option if it doesn't already exist.
+     *
+     * @param int $post_id The ID of the saved post.
+     * @param WP_Post|null $post The post object (optional).
+     *
+     * @since 1.0.0
+     */
     public function handle_new_group($post_id, $post = null) {
         if (!isset($_POST['nouveau_groupe']) || empty($_POST['nouveau_groupe'])) {
             return;
@@ -25,6 +47,19 @@ class GTRO_Settings {
         }
     }
 
+    /**
+     * Register the settings page for GTRO.
+     *
+     * This function checks if the GTRO settings page has already been
+     * registered. If not, it adds it to the list of registered settings
+     * pages. The page includes the following tabs: Dates, Voitures, Prix
+     * and Options.
+     *
+     * @param array $settings_pages The list of registered settings pages.
+     * @return array The updated list of registered settings pages.
+     *
+     * @since 1.0.0
+     */
     public function register_settings_pages($settings_pages) {
         if (!isset($settings_pages['gtro'])) {
             $settings_pages['gtro'] = [
@@ -42,6 +77,20 @@ class GTRO_Settings {
         return $settings_pages;
     }
 
+    /**
+     * Register the settings fields for the GTRO settings page.
+     *
+     * This function dynamically registers meta boxes for the GTRO settings page
+     * in the WordPress admin area. It includes tabs for managing dates, vehicles,
+     * pricing configurations, and additional options. The function also ensures
+     * that existing date groups and their respective meta boxes are added
+     * dynamically based on saved options.
+     *
+     * @param array $meta_boxes The array of registered meta boxes.
+     * @return array The updated array of registered meta boxes.
+     *
+     * @since 1.0.0
+     */
     public function register_settings_fields($meta_boxes) {
 
         // Éviter la duplication en vérifiant si déjà ajouté

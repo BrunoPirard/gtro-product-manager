@@ -40,7 +40,6 @@ if (!class_exists('GTRO_Plugin\GTRO_Main')) {
         protected $version;
 
         private static $instance = null;
-        // Déclarer la propriété settings explicitement
         private $settings;
         private $calendar;
 

@@ -4,6 +4,7 @@ namespace GTRO_Plugin;
 if (!defined('ABSPATH')) exit;
 
 class GTRO_Calendar {
+
     private $plugin_name;
     private $version;
     private $date_groups = array(
@@ -21,6 +22,17 @@ class GTRO_Calendar {
         )
     );
 
+    /**
+     * Initialize the GTRO_Calendar class and set its properties.
+     *
+     * This constructor sets the plugin name and version, registers the 
+     * 'display_calendar' shortcode, and enqueues styles and scripts 
+     * for the calendar functionality.
+     *
+     * @since 1.0.0
+     * @param string $plugin_name The name of the plugin.
+     * @param string $version The version of the plugin.
+     */
     public function __construct($plugin_name, $version) {
         $this->plugin_name = $plugin_name;
         $this->version = $version;
@@ -33,7 +45,14 @@ class GTRO_Calendar {
     }
 
     /**
-     * Enqueue styles for the calendar
+     * Register the styles and scripts for the calendar.
+     *
+     * This function registers the CSS and JavaScript files required for the calendar
+     * functionality. The styles and scripts are registered with unique handles 
+     * incorporating the plugin name and version. The script has a dependency on jQuery
+     * and is set to load in the footer.
+     *
+     * @since 1.0.0
      */
     public function enqueue_styles() {
         wp_register_style(
@@ -52,6 +71,18 @@ class GTRO_Calendar {
         );
     }
 
+    /**
+     * Shortcode pour afficher le calendrier des dates
+     *
+     * @param array $atts {
+     *     Shortcode attributes
+     *
+     *     @type string $groups Type de dates à afficher (monoplace, gt ou all)
+     *     @type string $view Type de vue (month ou list)
+     * }
+     *
+     * @return string HTML du calendrier
+     */
     public function calendar_shortcode($atts) {
         // Charger les styles uniquement quand le shortcode est utilisé
         wp_enqueue_style($this->plugin_name . '-calendar');
@@ -82,12 +113,12 @@ class GTRO_Calendar {
     private function get_all_dates($groups = 'all') {
         $all_dates = array();
         
-        error_log('Début get_all_dates avec groups: ' . $groups);
+        //error_log('Début get_all_dates avec groups: ' . $groups);
         
         foreach ($this->date_groups as $group_key => $group_info) {
             if ($groups === 'all' || $groups === $group_key) {
                 $dates_group = get_option('gtro_options');
-                error_log('Options complètes: ' . print_r($dates_group, true));
+                //error_log('Options complètes: ' . print_r($dates_group, true));
                 
                 if (isset($dates_group[$group_info['meta_key']]) && is_array($dates_group[$group_info['meta_key']])) {
                     foreach ($dates_group[$group_info['meta_key']] as $entry) {
@@ -109,7 +140,7 @@ class GTRO_Calendar {
             }
         }
         
-        error_log('Dates finales: ' . print_r($all_dates, true));
+        //error_log('Dates finales: ' . print_r($all_dates, true));
         return $all_dates;
     }
 
@@ -194,5 +225,4 @@ class GTRO_Calendar {
         $html .= '</div>'; // Fin du calendrier annuel
         return $html;
     }
-
 }

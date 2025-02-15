@@ -54,50 +54,56 @@ gtro-product-manager/ ├── admin/ │ ├── css/ │ │ └── gtro
 -   Les promotions sont en pourcentage
 -   Structure des données :
 
-```php
 $gtroData = array(
-    'basePrice' => float,
-    'pricePerLap' => float,
-    'categorySupplements' => array(
-        'cat1' => float,
-        'cat2' => float,
-        'cat3' => float
-    ),
-    'datesPromo' => array(),
-    'availableOptions' => array()
+'basePrice' => float,
+'pricePerLap' => float,
+'categorySupplements' => array(
+'cat1' => float,
+'cat2' => float,
+'cat3' => float
+),
+'datesPromo' => array(),
+'availableOptions' => array()
 );
 
 ## Dépendances
+
 -   WordPress 6.0+
 -   WooCommerce 8.0+
 -   Meta Box Plugin
 -   PHP 8.2+
 
 ## Shortcodes disponibles
+
 [display_calendar] - Affiche le calendrier des disponibilités
 
-Options:
-- groups="all|monoplace|gt" (défaut: all)
-- view="month" (défaut: month)
+## Options:
+
+-   groups="all|monoplace|gt" (défaut: all)
+-   view="month" (défaut: month)
 
 ## Bugs connus
+
 Problème potentiel avec l'affichage des prix si le format monétaire est modifié
 Les dates de promotion doivent être vérifiées pour le format
 
 ## Prochaines étapes suggérées
+
 Implémenter un système de validation robuste
 Ajouter des hooks pour plus de flexibilité
 Créer une documentation utilisateur
-Mettre en place des tests unitaires
 Optimiser les performances du calcul de prix
 Améliorer l'UX du formulaire de réservation
 
 ## Notes pour le développement
+
 Utiliser wp_localize_script pour passer les données au JS
-Maintenir la compatibilité avec les thèmes WooCommerce
 Suivre les standards WordPress pour le code
 Documenter toutes les fonctions et hooks
 
 Ce README servira de référence pour la suite du développement et permettra de maintenir une vision claire du projet.
 J'ai ajouté une section "Shortcodes disponibles" et amélioré le formatage général pour une meilleure lisibilité. Les listes sont maintenant correctement formatées avec des tirets, et j'ai ajouté des blocs de code avec la syntaxe appropriée.
+
+```
+
 ```

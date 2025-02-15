@@ -2,6 +2,11 @@
 namespace GTRO_Plugin;
 
 class GTRO_WooCommerce {
+    /**
+     * Register all actions and filters for the plugin.
+     *
+     * @since    1.0.0
+     */
     public function __construct() {
         add_action('woocommerce_product_data_tabs', [$this, 'add_gtro_product_tab']);
         add_action('woocommerce_product_data_panels', [$this, 'add_gtro_product_panel']);
@@ -24,12 +29,22 @@ class GTRO_WooCommerce {
         //add_action('admin_init', [$this, 'debug_meta_box_data']);
     }
 
+    /**
+     * Shortcode pour afficher les options GTRO dans le frontend.
+     *
+     * @return string Le HTML des options GTRO.
+     */
     public function display_gtro_options_shortcode() {
         ob_start();
         $this->display_gtro_options();
         return ob_get_clean();
     }
 
+    /**
+     * Affiche les groupes de dates et leurs dates associées dans les journaux d'erreurs.
+     *
+     * Utile pour déboguer les métadonnées des groupes de dates.
+     */
     public function debug_meta_box_data() {
         error_log('=== Début Debug GTRO ===');
         
@@ -46,6 +61,12 @@ class GTRO_WooCommerce {
         error_log('=== Fin Debug GTRO ===');
     }
 
+    /**
+     * Ajoute l'onglet "GTRO Options" à la page de produit.
+     *
+     * @param array $tabs Les onglets de la page de produit.
+     * @return array Les onglets de la page de produit, avec l'onglet "GTRO Options" ajouté.
+     */
     public function add_gtro_product_tab($tabs) {
         $tabs['gtro_options'] = array(
             'label'    => __('GTRO Options', 'gtro-product-manager'),
@@ -56,6 +77,12 @@ class GTRO_WooCommerce {
         return $tabs;
     }
 
+    /**
+     * Ajoute l'onglet "GTRO Options" à la page de produit, 
+     * avec les voitures et les options disponibles.
+     *
+     * @since 1.0.0
+     */
     public function add_gtro_product_panel() {
         global $post;
         ?>
@@ -128,6 +155,14 @@ class GTRO_WooCommerce {
         <?php
     }
    
+    /**
+     * Sauvegarde les options GTRO du produit.
+     *
+     * Marque d'abord toutes les options existantes comme "no", puis
+     * sauvegarde les valeurs cochées.
+     *
+     * @param int $post_id L'ID du produit.
+     */
    public function save_gtro_product_options($post_id) {
         // 1. D'abord, marquer toutes les options existantes comme "no"
         $available_voitures = rwmb_meta('voitures_gtro', ['object_type' => 'setting'], 'gtro_options');
@@ -161,6 +196,20 @@ class GTRO_WooCommerce {
         }
     }
 
+    /**
+     * Retrieve GTRO date groups from the options.
+     *
+     * This function fetches the date groups stored in the WordPress options
+     * and prepares them for use in a WooCommerce product setting. Each group
+     * is sanitized and mapped to its title.
+     *
+     * @since 1.0.0
+     *
+     * @return array An associative array of date groups with sanitized titles
+     *               as keys and the original group names as values. Includes
+     *               a default option for selecting a group.
+     */
+
     private function get_gtro_date_groups() {
         $groupes = get_option('gtro_groupes_dates', []);
         $options = ['' => __('Sélectionner un groupe', 'gtro-product-manager')];
@@ -172,6 +221,20 @@ class GTRO_WooCommerce {
         return $options;
     }
 
+    /**
+     * Display GTRO product options in the WooCommerce product page.
+     *
+     * This function retrieves and displays available vehicle models, extra laps, 
+     * date selections, and additional options for a GTRO product. The options 
+     * are dynamically generated based on the product's meta data and settings.
+     *
+     * - Vehicle Selection: Displays a dropdown of activated vehicle models.
+     * - Extra Laps: Provides an input field for specifying extra laps.
+     * - Date Selection: Shows a date selector based on the selected group.
+     * - Additional Options: Lists available add-ons with checkboxes.
+     *
+     * @since 1.0.0
+     */
     public function display_gtro_options() {
         global $product;
         
@@ -280,6 +343,14 @@ class GTRO_WooCommerce {
         }
     }
 
+    /**
+     * Affiche les options supplémentaires dans le panier
+     *
+     * @param array $item_data Les métadonnées du produit
+     * @param array $cart_item Les données de l'élément du panier
+     *
+     * @return array Les métadonnées du produit
+     */
     public function display_gtro_options_in_cart($item_data, $cart_item) {
         if (isset($cart_item['gtro_options'])) {
             foreach ($cart_item['gtro_options'] as $option_id => $price) {
@@ -292,7 +363,22 @@ class GTRO_WooCommerce {
         return $item_data;
     }
 
-    // Fonction pour calculer le prix total
+    /**
+     * Calcule le prix total d'un stage
+     *
+     * 1. Ajuste le prix en fonction de la catégorie du véhicule
+     * 2. Calcule le prix des tours supplémentaires
+     * 3. Applique la promotion de la date si elle existe
+     * 4. Ajoute le prix des options (après la promo)
+     *
+     * @param int $base_price Le prix de base du stage
+     * @param string $vehicle La catégorie du véhicule
+     * @param int $extra_laps Le nombre de tours supplémentaires
+     * @param string $selected_date La date sélectionnée
+     * @param array $selected_options Les options supplémentaires sélectionnées
+     *
+     * @return int Le prix total du stage
+     */
     private function calculate_total_price($base_price, $vehicle = '', $extra_laps = 0, $selected_date = '', $selected_options = array()) {
         $total = $base_price;
         
@@ -355,6 +441,16 @@ class GTRO_WooCommerce {
         return $total;
     }
 
+    /**
+     * Modifie l'affichage du prix d'un produit GTRO.
+     *
+     * Affiche le prix de base du produit, suivi d'une note indiquant que
+     * ce prix ne comprend pas les options.
+     *
+     * @param string $price_html Le prix HTML du produit.
+     * @param WC_Product $product Le produit.
+     * @return string Le prix modifié.
+     */
     public function modify_price_display($price_html, $product) {
         // Ne modifier le prix que sur la page du produit
         if (!is_product()) {
@@ -376,6 +472,16 @@ class GTRO_WooCommerce {
         return $price_html;
     }
 
+    /**
+     * Modifie les totaux du panier pour les produits GTRO.
+     *
+     * Pour chaque produit GTRO dans le panier, remplace le prix
+     * par le prix total calculé en prenant en compte la catégorie
+     * du véhicule, les tours supplémentaires, la promotion de la date
+     * et les options.
+     *
+     * @param WC_Cart $cart Le panier.
+     */
     public function calculate_totals($cart) {
         if (is_admin() && !defined('DOING_AJAX')) {
             return;
@@ -388,7 +494,18 @@ class GTRO_WooCommerce {
         }
     }
 
-    // Modifier add_gtro_options_to_cart pour utiliser le nouveau calcul de prix
+    /**
+     * Ajoute les options GTRO au panier.
+     *
+     * Récupère les données du formulaire et les ajoute au panier.
+     * Calcule également le prix total du produit en fonction
+     * de ces options.
+     *
+     * @param array $cart_item_data Les données du produit dans le panier.
+     * @param int $product_id L'ID du produit.
+     * @param int $variation_id L'ID de la variation du produit.
+     * @return array Les données du produit mises à jour.
+     */
     public function add_gtro_options_to_cart($cart_item_data, $product_id, $variation_id) {
         if (isset($_POST['gtro_vehicle'])) {
             $cart_item_data['gtro_vehicle'] = sanitize_text_field($_POST['gtro_vehicle']);
@@ -420,7 +537,15 @@ class GTRO_WooCommerce {
         return $cart_item_data;
     }
 
-    // Ajouter la validation des options requises
+    /**
+     * Valide les données GTRO envoyées par le formulaire
+     * pour s'assurer qu'elles sont bien remplies.
+     *
+     * @param bool $passed Si les données sont valides.
+     * @param int $product_id L'ID du produit.
+     * @param int $quantity La quantité du produit.
+     * @return bool Si les données sont valides.
+     */
     public function validate_gtro_options($passed, $product_id, $quantity) {
         if (!isset($_POST['gtro_vehicle']) || empty($_POST['gtro_vehicle'])) {
             wc_add_notice(__('Veuillez sélectionner un véhicule', 'gtro-product-manager'), 'error');
@@ -435,6 +560,14 @@ class GTRO_WooCommerce {
         return $passed;
     }
 
+    /**
+     * Récupère les données GTRO du produit en session
+     *
+     * @param array $cart_item Les données du produit dans le panier.
+     * @param array $values Les données du produit en session.
+     *
+     * @return array Les données du produit dans le panier avec les données GTRO.
+     */
     public function get_cart_item_from_session($cart_item, $values) {
         if (isset($values['gtro_vehicle'])) {
             $cart_item['gtro_vehicle'] = $values['gtro_vehicle'];
@@ -481,6 +614,17 @@ class GTRO_WooCommerce {
         return $dates_with_promos;
     }
 
+    /**
+     * Enqueue scripts and styles for the GTRO product page.
+     *
+     * This function checks if the current page is a product page and
+     * then enqueues the necessary JavaScript and CSS files for the GTRO plugin.
+     * It also prepares data related to the product, including base price, category
+     * supplements, promotional dates, and available options, and localizes it for 
+     * use in the frontend script.
+     *
+     * @since 1.0.0
+     */
     public function enqueue_scripts() {
         if (!is_product()) {
             return;
@@ -542,5 +686,4 @@ class GTRO_WooCommerce {
             'showPriceDetails' => true
         ));
     }
-
 }

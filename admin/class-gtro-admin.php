@@ -122,7 +122,6 @@ if (!class_exists('GTRO_Plugin\GTRO_Admin')) {
             // via la classe GTRO_Settings
             return;
             
-            /* Si vous voulez quand même ajouter un menu personnalisé, décommentez ceci :
             add_menu_page(
                 __('GTRO Settings', 'gtro-product-manager'),
                 __('GTRO', 'gtro-product-manager'),
@@ -132,7 +131,6 @@ if (!class_exists('GTRO_Plugin\GTRO_Admin')) {
                 'dashicons-calendar-alt',
                 6
             );
-            */
         }
 
         /**
