@@ -42,6 +42,7 @@ if (!class_exists('GTRO_Plugin\GTRO_Main')) {
         private static $instance = null;
         // Déclarer la propriété settings explicitement
         private $settings;
+        private $calendar;
 
         /**
          * Define the core functionality of the plugin.
@@ -80,6 +81,7 @@ if (!class_exists('GTRO_Plugin\GTRO_Main')) {
             require_once GTRO_PLUGIN_DIR . 'admin/class-gtro-admin.php';
             require_once GTRO_PLUGIN_DIR . 'includes/class-gtro-settings.php';
             require_once GTRO_PLUGIN_DIR . 'includes/class-gtro-woocommerce.php';
+            //require_once GTRO_PLUGIN_DIR . 'includes/class-gtro-calendar.php';
         
             $this->loader = new GTRO_Loader();
             $this->settings = new GTRO_Settings(); // Gardez uniquement cette initialisation
@@ -123,7 +125,13 @@ if (!class_exists('GTRO_Plugin\GTRO_Main')) {
          * @access   private
          */
         private function define_public_hooks() {
+            $plugin_public = new GTRO_Public($this->get_plugin_name(), $this->get_version());
+            
+            $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
+            $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
 
+            // Initialiser le calendrier
+            $this->calendar = new GTRO_Calendar();
         }
 
         /**

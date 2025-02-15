@@ -75,7 +75,7 @@ Voici le bon ordre de calcul :
 Prix de base du stage
 
 Supplément selon la catégorie de la voiture (depuis la settings page)
-Catégorie 1 : pas de supplément
+Catégorie 1 : + montant défini en settings
 Catégorie 2 : + montant défini en settings
 Catégorie 3 : + montant défini en settings
 (Nombre de tours supplémentaires × Prix par tour)

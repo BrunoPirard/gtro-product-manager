@@ -42,7 +42,6 @@ register_deactivation_hook(__FILE__, 'deactivate_gtro');
 
 require GTRO_PLUGIN_DIR . 'includes/class-gtro.php';
 
-
 function run_gtro() {
     static $plugin = null;
     if ($plugin === null) {

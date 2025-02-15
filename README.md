@@ -19,14 +19,32 @@ Affichage détaillé du prix
 gtro-product-manager/
 ├── admin/
 │ ├── css/
+│ │ └── gtro-admin.css
 │ ├── js/
+│ │ └── gtro-admin.js
 │ └── class-gtro-admin.php
-├── includes/
-│ └── class-gtro-loader.php
 ├── public/
 │ ├── css/
+│ │ └── gtro-public.css
+│ │ └── gtro-calendar.css
 │ ├── js/
+│ │ └── gtro-public.js
+│ │ └── gtro-calendar.js
 │ └── class-gtro-public.php
+├── includes/
+│ ├── class-gtro-activator.php
+│ ├── class-gtro-deactivator.php
+│ ├── class-gtro-i18n.php
+│ ├── class-gtro-loader.php
+│ ├── class-gtro-metabox.php
+│ ├── class-gtro-settings.php
+│ ├── class-gtro-calendar.php
+│ └── templates/
+│ └── calendar.php
+├── languages/
+│ └── gtro-product-manager.pot
+├── index.php
+├── uninstall.php
 └── gtro-product-manager.php
 
 ## Points à améliorer/développer
