@@ -22,7 +22,6 @@ gtro-product-manager/
 │ │ └── gtro-admin.css
 │ ├── js/
 │ │ └── gtro-admin.js
-│ └── class-gtro-admin.php
 ├── public/
 │ ├── css/
 │ │ └── gtro-public.css
@@ -30,7 +29,6 @@ gtro-product-manager/
 │ ├── js/
 │ │ └── gtro-public.js
 │ │ └── gtro-calendar.js
-│ └── class-gtro-public.php
 ├── includes/
 │ ├── class-gtro-activator.php
 │ ├── class-gtro-deactivator.php
