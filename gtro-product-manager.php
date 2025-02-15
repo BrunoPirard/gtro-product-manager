@@ -13,28 +13,34 @@
  * WC requires at least: 8.0.0
  * WC tested up to:      9.4.3
  * Requires Plugins:     woocommerce
+ *
+ * @package GTRO_Product_Manager
  */
-if (!defined('WPINC')) {
+
+if ( ! defined( 'WPINC' ) ) {
     die;
 }
 
-if (!defined('GTRO_VERSION')) {
-    define('GTRO_VERSION', '1.1.0');
+if ( ! defined( 'GTRO_VERSION' ) ) {
+	define( 'GTRO_VERSION', '1.1.0' );
 }
 
-if (!defined('GTRO_PLUGIN_DIR')) {
-    define('GTRO_PLUGIN_DIR', plugin_dir_path(__FILE__));
+if ( ! defined( 'GTRO_PLUGIN_DIR' ) ) {
+	define( 'GTRO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 }
 
-if (!defined('GTRO_PLUGIN_URL')) {
-    define('GTRO_PLUGIN_URL', plugin_dir_url(__FILE__));
+if ( ! defined( 'GTRO_PLUGIN_URL' ) ) {
+	define( 'GTRO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 
-add_action('before_woocommerce_init', function() {
-    if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
-        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
-    }
-});
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		}
+	}
+);
 
 
 /**
@@ -46,8 +52,8 @@ add_action('before_woocommerce_init', function() {
  * @since 1.0.0
  */
 function activate_gtro() {
-    require_once GTRO_PLUGIN_DIR . 'includes/class-gtro-activator.php';
-    GTRO_Plugin\GTRO_Activator::activate();
+	include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-activator.php';
+	GTRO_Plugin\GTRO_Activator::activate();
 }
 
 /**
@@ -59,12 +65,12 @@ function activate_gtro() {
  * @since 1.0.0
  */
 function deactivate_gtro() {
-    require_once GTRO_PLUGIN_DIR . 'includes/class-gtro-deactivator.php';
-    GTRO_Plugin\GTRO_Deactivator::deactivate();
+	include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-deactivator.php';
+	GTRO_Plugin\GTRO_Deactivator::deactivate();
 }
 
-register_activation_hook(__FILE__, 'activate_gtro');
-register_deactivation_hook(__FILE__, 'deactivate_gtro');
+register_activation_hook( __FILE__, 'activate_gtro' );
+register_deactivation_hook( __FILE__, 'deactivate_gtro' );
 
 require GTRO_PLUGIN_DIR . 'includes/class-gtro.php';
 
@@ -72,18 +78,19 @@ require GTRO_PLUGIN_DIR . 'includes/class-gtro.php';
  * Initializes and returns the GTRO_Main plugin instance.
  *
  * This function ensures that the GTRO_Main plugin is only instantiated once
- * and returns the instance. It is hooked to the 'plugins_loaded' action to 
+ * and returns the instance. It is hooked to the 'plugins_loaded' action to
  * ensure that the plugin is fully loaded and ready to use.
  *
- * @since 1.0.0
+ * @since  1.0.0
  * @return GTRO_Plugin\GTRO_Main The instance of the GTRO_Main plugin.
  */
 function run_gtro() {
-    static $plugin = null;
-    if ($plugin === null) {
-        $plugin = new GTRO_Plugin\GTRO_Main();
-    }
-    return $plugin;
+	static $plugin = null;
+
+	if (null === $plugin) {
+		$plugin = new GTRO_Plugin\GTRO_Main();
+	}
+	return $plugin;
 }
 
-add_action('plugins_loaded', 'run_gtro');
+add_action( 'plugins_loaded', 'run_gtro' );
