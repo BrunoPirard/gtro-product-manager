@@ -1,26 +1,105 @@
 jQuery(document).ready(function ($) {
-    /*$('select[name="gtro_formule_option"]').on("change", function () {
-        const selectedOption = $(this).find("option:selected");
-        console.log("=== FORMULE CHANGE DEBUG ===");
-        console.log("Selected option:", selectedOption.text());
-        console.log("Data price attribute:", selectedOption.attr("data-price"));
-        console.log("Option value:", selectedOption.val());
-        console.log("Raw option element:", selectedOption[0]);
-        console.log("========================");
-    });*/
-
     console.log("GTRO Data loaded:", gtroData);
     console.log("Max Tours:", gtroData.maxTours);
+
+    // Configuration de la sélection multiple
+    const vehicleSelection = $(".gtro-vehicle-selection");
+    const selectionType = vehicleSelection.data("selection-type");
+    const maxVehicles = {
+        single: 1,
+        double: 2,
+        triple: 3,
+        quadruple: 4,
+    }[selectionType];
+
+    let selectedVehicles = [];
+
     // Gestion de la sélection des véhicules
-    $(".vehicle-card").on("click", function () {
-        const value = $(this).data("value");
+    $(".vehicle-card")
+        .off("click")
+        .on("click", function () {
+            const $this = $(this);
+            const vehicleId = $this.data("value");
+            const vehicleName = $this.find("h4").text();
+            const category = $this.data("category");
 
-        // Mettre à jour la sélection visuelle
-        $(".vehicle-card").removeClass("selected");
-        $(this).addClass("selected");
+            if (selectionType === "single") {
+                // Comportement existant pour la sélection unique
+                $(".vehicle-card").removeClass("selected");
+                $this.addClass("selected");
+                selectedVehicles = [
+                    { id: vehicleId, name: vehicleName, category: category },
+                ];
+            } else {
+                // Nouveau comportement pour la sélection multiple
+                if ($this.hasClass("selected")) {
+                    $this.removeClass("selected");
+                    selectedVehicles = selectedVehicles.filter(
+                        (v) => v.id !== vehicleId
+                    );
+                } else {
+                    if (selectedVehicles.length >= maxVehicles) {
+                        alert(
+                            `Vous ne pouvez sélectionner que ${maxVehicles} véhicule(s) maximum.`
+                        );
+                        return;
+                    }
+                    $this.addClass("selected");
+                    selectedVehicles.push({
+                        id: vehicleId,
+                        name: vehicleName,
+                        category: category,
+                    });
+                }
+            }
 
-        // Mettre à jour le select caché
-        $('select[name="gtro_vehicle"]').val(value).trigger("change");
+            $(".vehicle-counter span").text(selectedVehicles.length);
+            updateSelectedVehiclesList();
+
+            // Mettre à jour le champ caché
+            $('select[name="gtro_vehicle"]').val(
+                selectedVehicles.map((v) => v.id).join(",")
+            );
+
+            // Déclencher directement le calcul du prix
+            updatePrice();
+        });
+
+    // Fonction pour mettre à jour la liste des véhicules sélectionnés
+    function updateSelectedVehiclesList() {
+        const $list = $(".selected-vehicles-list");
+        if (!$list.length) return;
+
+        $list.empty();
+        selectedVehicles.forEach((vehicle) => {
+            $list.append(`
+                <div class="selected-vehicle">
+                    <span>${vehicle.name}</span>
+                    <button type="button" class="remove-vehicle" data-id="${vehicle.id}">×</button>
+                </div>
+            `);
+        });
+    }
+
+    // Gestion de la suppression depuis la liste
+    $(document).on("click", ".remove-vehicle", function (e) {
+        e.preventDefault();
+        const vehicleId = $(this).data("id");
+
+        // Désélectionner la carte
+        $(`.vehicle-card[data-value="${vehicleId}"]`).removeClass("selected");
+
+        // Mettre à jour la liste
+        selectedVehicles = selectedVehicles.filter((v) => v.id !== vehicleId);
+        updateSelectedVehiclesList();
+
+        // Mettre à jour le compteur
+        $(".vehicle-counter span").text(selectedVehicles.length);
+
+        // Mettre à jour le champ caché et déclencher le calcul du prix
+        $('select[name="gtro_vehicle"]')
+            .val(selectedVehicles.map((v) => v.id).join(","))
+            .trigger("change");
     });
 
     // Créer les conteneurs de prix s'ils n'existent pas
@@ -32,10 +111,16 @@ jQuery(document).ready(function ($) {
     }
 
     function formatPrice(price) {
+        // Arrondir au nombre entier supérieur
+        const roundedPrice = Math.ceil(price);
+
+        // Formatter sans décimales
         return new Intl.NumberFormat("fr-FR", {
             style: "currency",
             currency: "EUR",
-        }).format(price);
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(roundedPrice);
     }
 
     function updatePriceDisplays(price, details) {
@@ -146,14 +231,34 @@ jQuery(document).ready(function ($) {
 
     function updatePrice() {
         console.log("Full vehicles data:", gtroData.vehiclesData);
-        // On commence avec le prix de base du produit
-        let totalPrice = parseFloat(gtroData.basePrice);
-        let vehicleSupplementBase = 0;
-        let formulePrice = 0;
-        let selectedCategory = "";
-        let extraLapsPrice = 0; // Ajout de cette ligne
+        console.log("Selected vehicles:", selectedVehicles);
+        console.log(
+            "Vehicle IDs:",
+            selectedVehicles.map((v) => v.id)
+        );
+        console.log("Combos disponibles:", gtroData.combosVoitures);
 
-        console.log("Starting with base price:", totalPrice);
+        let totalPrice = parseFloat(gtroData.basePrice);
+        let totalVehicleSupplementBase = 0;
+        let formulePrice = 0;
+        let extraLapsPrice = 0;
+        let highestCategory = "1"; // Catégorie par défaut
+
+        // Traitement des véhicules sélectionnés
+        selectedVehicles.forEach((vehicle) => {
+            if (gtroData.vehiclesData[vehicle.id]) {
+                const vehicleData = gtroData.vehiclesData[vehicle.id];
+                console.log("Processing vehicle:", {
+                    id: vehicle.id,
+                    data: vehicleData,
+                    supplement: vehicleData.supplement_base,
+                });
+                totalVehicleSupplementBase += vehicleData.supplement_base || 0;
+            }
+        });
+
+        // Ajouter le supplément des véhicules au prix total
+        totalPrice += totalVehicleSupplementBase;
 
         // Traitement des formules (si pas de tours max)
         if (parseInt(gtroData.maxTours) === 0) {
@@ -161,76 +266,68 @@ jQuery(document).ready(function ($) {
                 'select[name="gtro_formule_option"] option:selected'
             );
             const priceFromAttribute = selectedFormuleOption.attr("data-price");
-
-            console.log("=== FORMULE PROCESSING ===");
-            console.log("Selected formule:", selectedFormuleOption.text());
-            console.log("Formule supplement:", priceFromAttribute);
-
             if (priceFromAttribute) {
                 formulePrice = parseFloat(priceFromAttribute);
-                totalPrice += formulePrice; // Ajouter le supplément au prix de base
-                console.log(
-                    "Adding formule supplement. New total:",
-                    totalPrice
-                );
+                totalPrice += formulePrice;
             }
         }
 
-        // Récupérer la voiture sélectionnée
-        const selectedVehicle = $(
-            'select[name="gtro_vehicle"] option:selected'
-        );
-        const vehicleValue = selectedVehicle.val();
-        console.log("Selected vehicle:", vehicleValue);
+        // Calcul des tours supplémentaires pour chaque véhicule
+        if (gtroData.maxTours > 0) {
+            const extraLaps =
+                parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
+            if (extraLaps > 0) {
+                // Calculer le prix des tours supplémentaires pour chaque véhicule
+                selectedVehicles.forEach((vehicle) => {
+                    if (gtroData.vehiclesData[vehicle.id]) {
+                        const vehicleData = gtroData.vehiclesData[vehicle.id];
+                        const category = vehicleData.categorie;
 
-        // Ajouter le supplément de base de la voiture
-        if (vehicleValue && gtroData.vehiclesData[vehicleValue]) {
-            const vehicleData = gtroData.vehiclesData[vehicleValue];
-            console.log("Selected vehicle data:", {
-                value: vehicleValue,
-                data: vehicleData,
-                category: vehicleData.categorie,
-                supplement: vehicleData.supplement_base,
-            });
+                        if (category && gtroData.categoryPrices[category]) {
+                            const pricePerLap =
+                                gtroData.categoryPrices[category];
+                            const vehicleExtraLapsPrice =
+                                extraLaps * pricePerLap;
+                            extraLapsPrice += vehicleExtraLapsPrice;
 
-            // Vérifier que nous avons bien les données du véhicule
-            if (!vehicleData.categorie) {
-                console.warn("Missing category for vehicle:", vehicleValue);
+                            console.log(
+                                `Tours supplémentaires pour ${vehicle.name}:`,
+                                {
+                                    category: category,
+                                    pricePerLap: pricePerLap,
+                                    total: vehicleExtraLapsPrice,
+                                }
+                            );
+                        }
+                    }
+                });
+
+                totalPrice += extraLapsPrice;
             }
+        }
 
-            vehicleSupplementBase = vehicleData.supplement_base || 0;
-            selectedCategory = vehicleData.categorie || "";
-            totalPrice += vehicleSupplementBase;
+        // Appliquer la remise multi-véhicules si applicable
+        let multiVehicleDiscount = 0;
+        if (selectedVehicles.length > 1) {
+            const nombreVehicules = `${selectedVehicles.length}gt`;
 
-            console.log("Vehicle category:", selectedCategory);
-            console.log("Vehicle supplement:", vehicleSupplementBase);
+            // Rechercher la remise correspondante dans les données Metabox
+            if (
+                gtroData.combosVoitures &&
+                Array.isArray(gtroData.combosVoitures)
+            ) {
+                const comboFound = gtroData.combosVoitures.find(
+                    (combo) => combo.type_combo === nombreVehicules
+                );
 
-            // Si max_tours > 0, calculer les tours supplémentaires
-            if (gtroData.maxTours > 0) {
-                console.log("Processing extra laps mode");
-                const extraLaps =
-                    parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
-                console.log("Number of extra laps:", extraLaps);
-                console.log("Vehicle category:", selectedCategory);
-                console.log("All category prices:", gtroData.categoryPrices);
-
-                if (
-                    extraLaps > 0 &&
-                    selectedCategory &&
-                    gtroData.categoryPrices[selectedCategory]
-                ) {
-                    const pricePerLap =
-                        gtroData.categoryPrices[selectedCategory];
-                    console.log("Price per lap for category:", pricePerLap);
-                    extraLapsPrice = extraLaps * pricePerLap;
-                    totalPrice += extraLapsPrice;
-                    console.log("Total extra laps price:", extraLapsPrice);
-                } else if (extraLaps > 0) {
-                    console.warn("Could not calculate extra laps price:", {
-                        extraLaps,
-                        selectedCategory,
-                        categoryPrices: gtroData.categoryPrices,
-                    });
+                if (comboFound && comboFound.remise) {
+                    const remisePercent = parseFloat(comboFound.remise);
+                    multiVehicleDiscount = totalPrice * (remisePercent / 100);
+                    totalPrice -= multiVehicleDiscount;
+                    console.log(
+                        `Remise multi-véhicules ${nombreVehicules} (${remisePercent}%):`,
+                        multiVehicleDiscount
+                    );
                 }
             }
         }
@@ -288,13 +385,13 @@ jQuery(document).ready(function ($) {
         console.log("=== FINAL PRICE DETAILS ===");
         console.log("Total price:", totalPrice);
         console.log("Formule price:", formulePrice);
-        console.log("Vehicle supplement:", vehicleSupplementBase);
+        console.log("Vehicle supplement:", totalVehicleSupplementBase);
 
         updatePriceDisplays(totalPrice, {
             basePrice: formulePrice || gtroData.basePrice,
-            vehicleSupplementBase,
-            selectedCategory,
-            extraLapsPrice, // Cette variable est maintenant définie
+            vehicleSupplementBase: totalVehicleSupplementBase,
+            selectedCategory: highestCategory,
+            extraLapsPrice,
             formulePrice,
             subtotalBeforePromo: totalPrice,
             promoAmount,

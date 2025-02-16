@@ -105,23 +105,40 @@ class GTRO_WooCommerce {
 		?>
 		<div id="gtro_options_product_data" class="panel woocommerce_options_panel">
 			<?php
-			// Section des voitures disponibles
+			// Nouveau sélecteur pour le type de sélection de véhicules
+			woocommerce_wp_select(
+				array(
+					'id'          => '_gtro_vehicle_selection_type',
+					'label'       => __('Type de sélection des véhicules', 'gtro-product-manager'),
+					'description' => __('Définissez combien de véhicules le client peut sélectionner', 'gtro-product-manager'),
+					'desc_tip'    => true,
+					'options'     => array(
+						'single'   => __('1 véhicule uniquement', 'gtro-product-manager'),
+						'double'   => __('2 véhicules', 'gtro-product-manager'),
+						'triple'   => __('3 véhicules', 'gtro-product-manager'),
+						'quadruple' => __('4 véhicules', 'gtro-product-manager')
+					),
+					'value'       => get_post_meta($post->ID, '_gtro_vehicle_selection_type', true) ?: 'single'
+				)
+			);
+
+			// Section des voitures disponibles (code existant)
 			echo '<div class="options-group">';
-			echo '<h4>' . __( 'Voitures disponibles', 'gtro-product-manager' ) . '</h4>';
+			echo '<h4>' . __('Voitures disponibles', 'gtro-product-manager') . '</h4>';
 
 			// Récupérer les voitures
-			$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
+			$available_voitures = rwmb_meta('voitures_gtro', array('object_type' => 'setting'), 'gtro_options');
 
-			if ( ! empty( $available_voitures ) ) {
-				foreach ( $available_voitures as $voiture ) {
-					if ( isset( $voiture['modeles'] ) ) {
-						$voiture_id = '_gtro_voiture_' . sanitize_title( $voiture['modeles'] );
+			if (!empty($available_voitures)) {
+				foreach ($available_voitures as $voiture) {
+					if (isset($voiture['modeles'])) {
+						$voiture_id = '_gtro_voiture_' . sanitize_title($voiture['modeles']);
 						woocommerce_wp_checkbox(
 							array(
 								'id'          => $voiture_id,
 								'label'       => $voiture['modeles'],
-								'description' => sprintf( __( 'Catégorie: %s', 'gtro-product-manager' ), $voiture['categorie'] ),
-								'value'       => get_post_meta( $post->ID, $voiture_id, true ),
+								'description' => sprintf(__('Catégorie: %s', 'gtro-product-manager'), $voiture['categorie']),
+								'value'       => get_post_meta($post->ID, $voiture_id, true),
 							)
 						);
 					}
@@ -210,35 +227,44 @@ class GTRO_WooCommerce {
 	 *
 	 * @param int $post_id L'ID du produit.
 	 */
-	public function save_gtro_product_options( $post_id ) {
+	public function save_gtro_product_options($post_id) {
+		// Sauvegarder le type de sélection des véhicules
+		if (isset($_POST['_gtro_vehicle_selection_type'])) {
+			update_post_meta(
+				$post_id,
+				'_gtro_vehicle_selection_type',
+				sanitize_text_field($_POST['_gtro_vehicle_selection_type'])
+			);
+		}
+
 		// 1. D'abord, marquer toutes les options existantes comme "no"
-		$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
-		$available_options  = rwmb_meta( 'options_supplementaires', array( 'object_type' => 'setting' ), 'gtro_options' );
+		$available_voitures = rwmb_meta('voitures_gtro', array('object_type' => 'setting'), 'gtro_options');
+		$available_options = rwmb_meta('options_supplementaires', array('object_type' => 'setting'), 'gtro_options');
 
 		// Réinitialiser les voitures
-		if ( ! empty( $available_voitures ) ) {
-			foreach ( $available_voitures as $voiture ) {
-				if ( isset( $voiture['modeles'] ) ) {
-					$voiture_id = '_gtro_voiture_' . sanitize_title( $voiture['modeles'] );
-					update_post_meta( $post_id, $voiture_id, 'no' );
+		if (!empty($available_voitures)) {
+			foreach ($available_voitures as $voiture) {
+				if (isset($voiture['modeles'])) {
+					$voiture_id = '_gtro_voiture_' . sanitize_title($voiture['modeles']);
+					update_post_meta($post_id, $voiture_id, 'no');
 				}
 			}
 		}
 
 		// Réinitialiser les options
-		if ( ! empty( $available_options ) ) {
-			foreach ( $available_options as $option ) {
-				if ( isset( $option['options'] ) ) {
-					$option_id = '_gtro_option_' . sanitize_title( $option['options'] );
-					update_post_meta( $post_id, $option_id, 'no' );
+		if (!empty($available_options)) {
+			foreach ($available_options as $option) {
+				if (isset($option['options'])) {
+					$option_id = '_gtro_option_' . sanitize_title($option['options']);
+					update_post_meta($post_id, $option_id, 'no');
 				}
 			}
 		}
 
 		// 2. Ensuite sauvegarder les valeurs cochées
-		foreach ( $_POST as $key => $value ) {
-			if ( strpos( $key, '_gtro_' ) === 0 ) {
-				update_post_meta( $post_id, $key, sanitize_text_field( $value ) );
+		foreach ($_POST as $key => $value) {
+			if (strpos($key, '_gtro_') === 0) {
+				update_post_meta($post_id, $key, sanitize_text_field($value));
 			}
 		}
 	}
@@ -284,15 +310,21 @@ class GTRO_WooCommerce {
 	public function display_gtro_options() {
 		global $product;
 
-		// Récupérer les voitures activées
-		$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
-		$voitures_activees  = array();
+		// Récupérer le type de sélection
+		$selection_type = get_post_meta($product->get_id(), '_gtro_vehicle_selection_type', true);
+		if (empty($selection_type)) {
+			$selection_type = 'single'; // Valeur par défaut
+		}
 
-		if ( ! empty( $available_voitures ) ) {
-			foreach ( $available_voitures as $voiture ) {
-				if ( isset( $voiture['modeles'] ) ) {
-					$voiture_id = '_gtro_voiture_' . sanitize_title( $voiture['modeles'] );
-					if ( get_post_meta( $product->get_id(), $voiture_id, true ) === 'yes' ) {
+		// Récupérer les voitures activées
+		$available_voitures = rwmb_meta('voitures_gtro', array('object_type' => 'setting'), 'gtro_options');
+		$voitures_activees = array();
+
+		if (!empty($available_voitures)) {
+			foreach ($available_voitures as $voiture) {
+				if (isset($voiture['modeles'])) {
+					$voiture_id = '_gtro_voiture_' . sanitize_title($voiture['modeles']);
+					if (get_post_meta($product->get_id(), $voiture_id, true) === 'yes') {
 						$voitures_activees[] = $voiture;
 					}
 				}
@@ -300,17 +332,37 @@ class GTRO_WooCommerce {
 		}
 
 		// Afficher le sélecteur de voitures
-		echo '<div class="gtro-vehicle-selection">';
-		echo '<h3>' . __( 'Sélection du véhicule', 'gtro-product-manager' ) . '</h3>';
+		echo '<div class="gtro-vehicle-selection" data-selection-type="' . esc_attr($selection_type) . '">';
+		
+		// Titre et compteur en fonction du type de sélection
+		$max_vehicles = array(
+			'single' => 1,
+			'double' => 2,
+			'triple' => 3,
+			'quadruple' => 4
+		);
+		
+		echo '<h3>' . sprintf(
+			__('Sélection de véhicule(s) (%d maximum)', 'gtro-product-manager'),
+			$max_vehicles[$selection_type]
+		) . '</h3>';
+		
+		// Compteur de véhicules sélectionnés
+		if ($selection_type !== 'single') {
+			echo '<div class="vehicle-counter">' . 
+				sprintf(__('Véhicules sélectionnés: <span>0</span>/%d', 'gtro-product-manager'), 
+				$max_vehicles[$selection_type]) . 
+				'</div>';
+		}
 
 		// Grille de véhicules
 		echo '<div class="vehicles-grid">';
-		foreach ( $voitures_activees as $voiture ) {
-			$vehicle_id = sanitize_title( $voiture['modeles'] );
-			echo '<div class="vehicle-card" data-value="' . esc_attr($vehicle_id) . '" data-category="' . esc_attr( $voiture['categorie'] ) . '">';
+		foreach ($voitures_activees as $voiture) {
+			$vehicle_id = sanitize_title($voiture['modeles']);
+			echo '<div class="vehicle-card" data-value="' . esc_attr($vehicle_id) . '" 
+					data-category="' . esc_attr($voiture['categorie']) . '">';
 			
-			// Récupérer l'image avec wp_get_attachment_image_url
-			if (isset($voiture['image_voiture']) && !empty($voiture['image_voiture'])) {
+			if (isset($voiture['image_voiture'])) {
 				$image_url = wp_get_attachment_image_url($voiture['image_voiture'], 'full');
 				if ($image_url) {
 					echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($voiture['modeles']) . '">';
@@ -318,22 +370,22 @@ class GTRO_WooCommerce {
 			}
 			
 			echo '<h4>' . esc_html($voiture['modeles']) . '</h4>';
+			echo '<div class="selection-indicator"></div>';
 			echo '</div>';
 		}
 		echo '</div>';
 
-		// Select caché pour maintenir la compatibilité avec le JS existant
-		echo '<select name="gtro_vehicle" required style="display: none;">';
-		echo '<option value="">' . __( 'Choisissez votre véhicule', 'gtro-product-manager' ) . '</option>';
-		// Debug
-		//error_log('Voitures activées : ' . print_r($voitures_activees, true));
-		foreach ( $voitures_activees as $voiture ) {
-			echo '<option value="' . esc_attr( sanitize_title( $voiture['modeles'] ) ) . '" 
-				data-category="' . esc_attr( $voiture['categorie'] ) . '">'
-				. esc_html( $voiture['modeles'] )
-				. '</option>';
+		// Zone des véhicules sélectionnés (pour les sélections multiples)
+		if ($selection_type !== 'single') {
+			echo '<div class="selected-vehicles-container">';
+			echo '<h4>' . __('Véhicules sélectionnés', 'gtro-product-manager') . '</h4>';
+			echo '<div class="selected-vehicles-list"></div>';
+			echo '</div>';
 		}
-		echo '</select>';
+
+		// Champ caché pour stocker les sélections
+		echo '<input type="hidden" name="gtro_vehicle" class="gtro-vehicle-input" value="" required>';
+		
 		echo '</div>';
 
 		// 3. Tours supplémentaires
@@ -871,6 +923,20 @@ class GTRO_WooCommerce {
 		//error_log('Available vehicles: ' . print_r($available_voitures, true));
 		//error_log('Processed vehicles data: ' . print_r($vehicles_data, true));
 
+		// Récupérer les combos multi-voitures et leurs remises
+		$combos_voitures = array();
+		$combos = rwmb_meta('combos_voitures', array('object_type' => 'setting'), 'gtro_options');
+		if (!empty($combos)) {
+			foreach ($combos as $combo) {
+				if (isset($combo['type_combo']) && isset($combo['remise'])) {
+					$combos_voitures[] = array(
+						'type_combo' => $combo['type_combo'],
+						'remise' => floatval($combo['remise'])
+					);
+				}
+			}
+		}
+
 		wp_localize_script(
 			'gtro-public',
 			'gtroData',
@@ -882,7 +948,8 @@ class GTRO_WooCommerce {
 				'availableOptions' => empty($available_options) ? array() : $available_options,
 				'showPriceDetails' => true,
 				'maxTours'         => intval(get_post_meta($product_id, '_gtro_max_tours', true)),
-				'formulesData'     => $formules_data  // Ajout des données des formules
+				'formulesData'     => $formules_data,
+				'combosVoitures'   => $combos_voitures  // Ajout des données des combos
 			)
 		);
 	}
