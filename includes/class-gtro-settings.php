@@ -68,10 +68,11 @@ class GTRO_Settings {
 				'id'          => 'gtro',
 				'menu_title'  => __( 'GTRO Settings', 'gtro-product-manager' ),
 				'option_name' => 'gtro_options',
-				'tabs'        => array(
+				'tabs' => array(
 					'dates'    => __( 'Dates', 'gtro-product-manager' ),
 					'voitures' => __( 'Voitures', 'gtro-product-manager' ),
 					'prix'     => __( 'Prix', 'gtro-product-manager' ),
+					'formules' => __( 'Formules', 'gtro-product-manager' ),
 					'options'  => __( 'Options', 'gtro-product-manager' ),
 				),
 			);
@@ -251,6 +252,48 @@ class GTRO_Settings {
 							'step' => '0.5',
 							'min'  => '0',
 							'max'  => '100',
+						),
+					),
+				),
+			),
+		);
+
+		// Onglet Formules
+		$meta_boxes[] = array(
+			'title'          => __( 'Formules GTRO', 'gtro-product-manager' ),
+			'id'             => 'formules',
+			'settings_pages' => array( 'gtro' ),
+			'tab'            => 'formules',
+			'fields'         => array(
+				array(
+					'name'   => __( 'Liste des formules', 'gtro-product-manager' ),
+					'id'     => 'formules_list',
+					'type'   => 'group',
+					'clone'  => true,
+					'sort_clone' => true,
+					'fields' => array(
+						array(
+							'name' => __( 'Nom de la formule', 'gtro-product-manager' ),
+							'id'   => 'nom_formule',
+							'type' => 'text',
+						),
+						array(
+							'name'   => __( 'Options formule', 'gtro-product-manager' ),
+							'id'     => 'options_formule',
+							'type'   => 'group',
+							'clone'  => true,
+							'fields' => array(
+								array(
+									'name'    => __( 'Nom de l\'option', 'gtro-product-manager' ),
+									'id'      => 'nom_option_formule',
+									'type'    => 'text',
+								),
+								array(
+									'name' => __( 'Prix formule', 'gtro-product-manager' ),
+									'id'   => 'prix_formule',
+									'type' => 'number',
+								),
+							),
 						),
 					),
 				),

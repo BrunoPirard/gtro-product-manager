@@ -18,7 +18,7 @@
  */
 
 if ( ! defined( 'WPINC' ) ) {
-    die;
+	die;
 }
 
 if ( ! defined( 'GTRO_VERSION' ) ) {
@@ -87,7 +87,7 @@ require GTRO_PLUGIN_DIR . 'includes/class-gtro.php';
 function run_gtro() {
 	static $plugin = null;
 
-	if (null === $plugin) {
+	if ( null === $plugin ) {
 		$plugin = new GTRO_Plugin\GTRO_Main();
 	}
 	return $plugin;

@@ -20,27 +20,28 @@ class GTRO_WooCommerce {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-		add_action('woocommerce_product_data_tabs', [$this, 'add_gtro_product_tab']);
-		add_action('woocommerce_product_data_panels', [$this, 'add_gtro_product_panel']);
-		add_action('woocommerce_process_product_meta', [$this, 'save_gtro_product_options']);
-		add_action('woocommerce_before_add_to_cart_form', [$this, 'display_price_details'], 5);
-		
+
+		add_filter( 'pewc_show_totals', '__return_false', 999 ); // Priorité élevée pour s'assurer qu'il s'applique
+		add_action( 'woocommerce_product_data_tabs', array( $this, 'add_gtro_product_tab' ) );
+		add_action( 'woocommerce_product_data_panels', array( $this, 'add_gtro_product_panel' ) );
+		add_action( 'woocommerce_process_product_meta', array( $this, 'save_gtro_product_options' ) );
+		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'display_gtro_options' ), 5 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+
 		// Ajuster la priorité des hooks en fonction de Product Add-ons
 		if ( $this->is_product_addons_active() ) {
-			add_action('woocommerce_before_add_to_cart_button', [$this, 'display_gtro_options'], 5);
+			add_action( 'woocommerce_before_add_to_cart_form', array( $this, 'display_price_details' ), 5 );
 		} else {
-			add_action('woocommerce_before_add_to_cart_button', [$this, 'display_gtro_options'], 10);
+			add_action( 'woocommerce_before_add_to_cart_form', array( $this, 'display_price_details' ), 10 );
 		}
 
-		add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'add_gtro_options_to_cart' ), 10, 3 );
+		add_filter( 'woocommerce_get_cart_item_from_session', array( $this, 'get_cart_item_from_session' ), 10, 2 );
+		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_gtro_options' ), 10, 3 );
+		add_filter( 'woocommerce_get_price_html', array( $this, 'modify_price_display' ), 10, 2 );
+		add_filter( 'woocommerce_calculate_totals', array( $this, 'calculate_totals' ), 10, 1 );
 
-		add_filter('woocommerce_add_cart_item_data', [$this, 'add_gtro_options_to_cart'], 10, 3);
-		add_filter('woocommerce_get_cart_item_from_session', [$this, 'get_cart_item_from_session'], 10, 2);
-		add_filter('woocommerce_add_to_cart_validation', [$this, 'validate_gtro_options'], 10, 3);
-		add_filter('woocommerce_get_price_html', [$this, 'modify_price_display'], 10, 2);
-		add_filter('woocommerce_calculate_totals', [$this, 'calculate_totals'], 10, 1);
-
-		//add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
+		// add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
 		// Debug hook
 		// add_action('admin_init', [$this, 'debug_meta_box_data']);
 	}
@@ -149,6 +150,28 @@ class GTRO_WooCommerce {
 						'min'  => '1',
 						'step' => '1',
 					),
+				)
+			);
+
+			// Sélection de la formule (visible uniquement si max_tours = 0)
+			$formules = rwmb_meta('formules_list', array('object_type' => 'setting'), 'gtro_options');
+			$formules_options = array('' => __('Sélectionner une formule', 'gtro-product-manager'));
+
+			if (!empty($formules)) {
+				foreach ($formules as $formule) {
+					if (isset($formule['nom_formule'])) {
+						$formules_options[sanitize_title($formule['nom_formule'])] = $formule['nom_formule'];
+					}
+				}
+			}
+
+			woocommerce_wp_select(
+				array(
+					'id'      => '_gtro_formule',
+					'label'   => __('Formule', 'gtro-product-manager'),
+					'options' => $formules_options,
+					'description' => __('Sélectionnez une formule (uniquement si le nombre maximum de tours est 0)', 'gtro-product-manager'),
+					'desc_tip' => true,
 				)
 			);
 
@@ -279,28 +302,81 @@ class GTRO_WooCommerce {
 		// Afficher le sélecteur de voitures
 		echo '<div class="gtro-vehicle-selection">';
 		echo '<h3>' . __( 'Sélection du véhicule', 'gtro-product-manager' ) . '</h3>';
-		echo '<select name="gtro_vehicle" required>';
-		echo '<option value="">' . __( 'Choisissez votre véhicule', 'gtro-product-manager' ) . '</option>';
 
+		// Grille de véhicules
+		echo '<div class="vehicles-grid">';
+		foreach ( $voitures_activees as $voiture ) {
+			$vehicle_id = sanitize_title( $voiture['modeles'] );
+			echo '<div class="vehicle-card" data-value="' . esc_attr($vehicle_id) . '" data-category="' . esc_attr( $voiture['categorie'] ) . '">';
+			
+			// Récupérer l'image avec wp_get_attachment_image_url
+			if (isset($voiture['image_voiture']) && !empty($voiture['image_voiture'])) {
+				$image_url = wp_get_attachment_image_url($voiture['image_voiture'], 'full');
+				if ($image_url) {
+					echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($voiture['modeles']) . '">';
+				}
+			}
+			
+			echo '<h4>' . esc_html($voiture['modeles']) . '</h4>';
+			echo '</div>';
+		}
+		echo '</div>';
+
+		// Select caché pour maintenir la compatibilité avec le JS existant
+		echo '<select name="gtro_vehicle" required style="display: none;">';
+		echo '<option value="">' . __( 'Choisissez votre véhicule', 'gtro-product-manager' ) . '</option>';
+		// Debug
+		//error_log('Voitures activées : ' . print_r($voitures_activees, true));
 		foreach ( $voitures_activees as $voiture ) {
 			echo '<option value="' . esc_attr( sanitize_title( $voiture['modeles'] ) ) . '" 
-                data-category="' . esc_attr( $voiture['categorie'] ) . '">'
+				data-category="' . esc_attr( $voiture['categorie'] ) . '">'
 				. esc_html( $voiture['modeles'] )
 				. '</option>';
 		}
-
 		echo '</select>';
 		echo '</div>';
 
 		// 3. Tours supplémentaires
-		$max_tours = intval( get_post_meta( $product->get_id(), '_gtro_max_tours', true ) );
+		$max_tours = intval(get_post_meta($product->get_id(), '_gtro_max_tours', true));
 
-		// N'afficher la section que si max_tours > 0
-		if ( $max_tours > 0 ) {
+		if ($max_tours > 0) {
+			// Code existant pour les tours supplémentaires
 			echo '<div class="gtro-extra-laps">';
-			echo '<h3>' . __( 'Tours supplémentaires', 'gtro-product-manager' ) . '</h3>';
-			echo '<input type="number" name="gtro_extra_laps" value="0" min="0" max="' . esc_attr( $max_tours ) . '">';
+			echo '<h3>' . __('Tours supplémentaires', 'gtro-product-manager') . '</h3>';
+			echo '<input type="number" name="gtro_extra_laps" value="0" min="0" max="' . esc_attr($max_tours) . '">';
 			echo '</div>';
+		} else {
+			// Récupérer la formule sélectionnée pour ce produit
+			$selected_formule = get_post_meta($product->get_id(), '_gtro_formule', true);
+			
+			if (!empty($selected_formule)) {
+				// Récupérer les options de la formule
+				$formules = rwmb_meta('formules_list', array('object_type' => 'setting'), 'gtro_options');
+				foreach ($formules as $formule) {
+					if (sanitize_title($formule['nom_formule']) === $selected_formule) {
+						if (isset($formule['options_formule']) && !empty($formule['options_formule'])) {
+							echo '<div class="gtro-formule-options">';
+							echo '<h3>' . __('Options disponibles', 'gtro-product-manager') . '</h3>';
+							echo '<select name="gtro_formule_option" required>';
+							echo '<option value="">' . __('Choisissez votre option', 'gtro-product-manager') . '</option>';
+							
+							foreach ($formule['options_formule'] as $option) {
+								if (isset($option['nom_option_formule']) && isset($option['prix_formule'])) {
+									echo '<option value="' . esc_attr(sanitize_title($option['nom_option_formule'])) . '" 
+										data-price="' . esc_attr($option['prix_formule']) . '">'
+										. esc_html($option['nom_option_formule'])
+										. ' - ' . wc_price($option['prix_formule'])
+										. '</option>';
+								}
+							}
+							
+							echo '</select>';
+							echo '</div>';
+						}
+						break;
+					}
+				}
+			}
 		}
 
 		// 4. Sélecteur de dates
@@ -400,23 +476,23 @@ class GTRO_WooCommerce {
 	 */
 	public function display_price_details() {
 		global $product;
-		
+
 		// Vérifier si c'est un produit GTRO
-		$date_group = get_post_meta($product->get_id(), '_gtro_date_group', true);
-		if (empty($date_group)) {
+		$date_group = get_post_meta( $product->get_id(), '_gtro_date_group', true );
+		if ( empty( $date_group ) ) {
 			return;
 		}
 
 		// Afficher le conteneur pour les détails du prix
 		echo '<div id="gtro-price-details" class="gtro-price-details">';
-		echo '<h3>' . esc_html__('Détails du prix', 'gtro-product-manager') . '</h3>';
+		echo '<h3>' . esc_html__( 'Détails du prix', 'gtro-product-manager' ) . '</h3>';
 		echo '<div class="price-breakdown">';
-		echo '<p class="base-price-line">' . esc_html__('Prix de base:', 'gtro-product-manager') . ' <span></span></p>';
-		echo '<p class="vehicle-supplement-line" style="display:none;">' . esc_html__('Supplément véhicule:', 'gtro-product-manager') . ' <span></span></p>';
-		echo '<p class="extra-laps-line" style="display:none;">' . esc_html__('Tours supplémentaires:', 'gtro-product-manager') . ' <span></span></p>';
-		echo '<p class="promo-line" style="display:none;">' . esc_html__('Promotion:', 'gtro-product-manager') . ' <span></span></p>';
-		echo '<p class="options-line" style="display:none;">' . esc_html__('Options:', 'gtro-product-manager') . ' <span></span></p>';
-		echo '<p class="total-price-line">' . esc_html__('Prix total:', 'gtro-product-manager') . ' <span></span></p>';
+		echo '<p class="base-price-line">' . esc_html__( 'Prix de base:', 'gtro-product-manager' ) . ' <span></span></p>';
+		echo '<p class="vehicle-supplement-line" style="display:none;">' . esc_html__( 'Supplément véhicule:', 'gtro-product-manager' ) . ' <span></span></p>';
+		echo '<p class="extra-laps-line" style="display:none;">' . esc_html__( 'Tours supplémentaires:', 'gtro-product-manager' ) . ' <span></span></p>';
+		echo '<p class="promo-line" style="display:none;">' . esc_html__( 'Promotion:', 'gtro-product-manager' ) . ' <span></span></p>';
+		echo '<p class="options-line" style="display:none;">' . esc_html__( 'Options:', 'gtro-product-manager' ) . ' <span></span></p>';
+		echo '<p class="total-price-line">' . esc_html__( 'Prix total:', 'gtro-product-manager' ) . ' <span></span></p>';
 		echo '</div>';
 		echo '</div>';
 	}
@@ -441,21 +517,20 @@ class GTRO_WooCommerce {
 	 *
 	 * @return int Le prix total du stage
 	 */
-	private function calculate_total_price( $base_price, $vehicle = '', $extra_laps = 0, $selected_date = '', $selected_options = array() ) {
+	private function calculate_total_price($base_price, $vehicle = '', $extra_laps = 0, $selected_date = '', $selected_options = array(), $formule_option = '') {
 		$total = $base_price;
 
 		// 1. Ajuster le prix en fonction de la catégorie du véhicule
-		if ( ! empty( $vehicle ) ) {
-			$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
-			foreach ( $available_voitures as $voiture ) {
-				if ( sanitize_title( $voiture['modeles'] ) === $vehicle ) {
-					// Ajouter le supplément selon la catégorie
-					switch ( $voiture['categorie'] ) {
+		if (!empty($vehicle)) {
+			$available_voitures = rwmb_meta('voitures_gtro', array('object_type' => 'setting'), 'gtro_options');
+			foreach ($available_voitures as $voiture) {
+				if (sanitize_title($voiture['modeles']) === $vehicle) {
+					switch ($voiture['categorie']) {
 						case '2':
-							$total += 50; // Supplément catégorie 2
+							$total += 50;
 							break;
 						case '3':
-							$total += 100; // Supplément catégorie 3
+							$total += 100;
 							break;
 					}
 					break;
@@ -463,37 +538,48 @@ class GTRO_WooCommerce {
 			}
 		}
 
-		// 2. Calculer le prix des tours supplémentaires
-		if ( $extra_laps > 0 ) {
-			$price_per_lap = get_option( 'gtro_price_per_lap', 50 );
-			$total        += ( $extra_laps * $price_per_lap );
+		// 2. Ajouter soit le prix des tours supplémentaires, soit le prix de la formule
+		if (!empty($formule_option)) {
+			// Si une formule est sélectionnée, ajouter son prix
+			$formules = rwmb_meta('formules_list', array('object_type' => 'setting'), 'gtro_options');
+			foreach ($formules as $formule) {
+				if (isset($formule['options_formule'])) {
+					foreach ($formule['options_formule'] as $option) {
+						if (sanitize_title($option['nom_option_formule']) === $formule_option) {
+							$total += floatval($option['prix_formule']);
+							break 2;
+						}
+					}
+				}
+			}
+		} elseif ($extra_laps > 0) {
+			// Sinon calculer le prix des tours supplémentaires
+			$price_per_lap = get_option('gtro_price_per_lap', 50);
+			$total += ($extra_laps * $price_per_lap);
 		}
 
-		// Sauvegarder le total avant promo pour les options
-		$total_before_promo = $total;
-
-		// 3. Appliquer la promotion de la date si elle existe
-		if ( ! empty( $selected_date ) ) {
+		// 3. Appliquer la promotion de la date si elle existe (sur le total incluant la formule)
+		if (!empty($selected_date)) {
 			global $product;
-			$selected_group = get_post_meta( $product->get_id(), '_gtro_date_group', true );
-			$dates          = rwmb_meta( 'dates_' . sanitize_title( $selected_group ), array( 'object_type' => 'setting' ), 'gtro_options' );
+			$selected_group = get_post_meta($product->get_id(), '_gtro_date_group', true);
+			$dates = rwmb_meta('dates_' . sanitize_title($selected_group), array('object_type' => 'setting'), 'gtro_options');
 
-			foreach ( $dates as $date ) {
-				if ( $date['date'] === $selected_date && isset( $date['promo'] ) && $date['promo'] > 0 ) {
-					$discount = $total * ( $date['promo'] / 100 );
-					$total   -= $discount;
+			foreach ($dates as $date) {
+				if ($date['date'] === $selected_date && isset($date['promo']) && $date['promo'] > 0) {
+					$discount = $total * ($date['promo'] / 100);
+					$total -= $discount;
 					break;
 				}
 			}
 		}
 
-		// 4. Ajouter le prix des options (après la promo)
-		if ( ! empty( $selected_options ) ) {
-			$available_options = rwmb_meta( 'options_supplementaires', array( 'object_type' => 'setting' ), 'gtro_options' );
-			foreach ( $selected_options as $option_slug ) {
-				foreach ( $available_options as $option ) {
-					if ( sanitize_title( $option['options'] ) === $option_slug ) {
-						$total += floatval( $option['prix_options'] );
+		// 4. Ajouter le prix des options supplémentaires (après la promo)
+		if (!empty($selected_options)) {
+			$available_options = rwmb_meta('options_supplementaires', array('object_type' => 'setting'), 'gtro_options');
+			foreach ($selected_options as $option_slug) {
+				foreach ($available_options as $option) {
+					if (sanitize_title($option['options']) === $option_slug) {
+						$total += floatval($option['prix_options']);
 						break;
 					}
 				}
@@ -568,21 +654,30 @@ class GTRO_WooCommerce {
 	 * @param  int   $variation_id   L'ID de la variation du produit.
 	 * @return array Les données du produit mises à jour.
 	 */
-	public function add_gtro_options_to_cart( $cart_item_data, $product_id, $variation_id ) {
-		if ( isset( $_POST['gtro_vehicle'] ) ) {
-			$cart_item_data['gtro_vehicle'] = sanitize_text_field( $_POST['gtro_vehicle'] );
+	public function add_gtro_options_to_cart($cart_item_data, $product_id, $variation_id) {
+		if (isset($_POST['gtro_vehicle'])) {
+			$cart_item_data['gtro_vehicle'] = sanitize_text_field($_POST['gtro_vehicle']);
 		}
 
-		if ( isset( $_POST['gtro_extra_laps'] ) ) {
-			$cart_item_data['gtro_extra_laps'] = intval( $_POST['gtro_extra_laps'] );
+		if (isset($_POST['gtro_date'])) {
+			$cart_item_data['gtro_date'] = sanitize_text_field($_POST['gtro_date']);
 		}
 
-		if ( isset( $_POST['gtro_date'] ) ) {
-			$cart_item_data['gtro_date'] = sanitize_text_field( $_POST['gtro_date'] );
+		// Vérifier si c'est un produit avec tours supplémentaires ou formule
+		$max_tours = intval(get_post_meta($product_id, '_gtro_max_tours', true));
+		
+		if ($max_tours > 0) {
+			if (isset($_POST['gtro_extra_laps'])) {
+				$cart_item_data['gtro_extra_laps'] = intval($_POST['gtro_extra_laps']);
+			}
+		} else {
+			if (isset($_POST['gtro_formule_option'])) {
+				$cart_item_data['gtro_formule_option'] = sanitize_text_field($_POST['gtro_formule_option']);
+			}
 		}
 
 		// Calculer le nouveau prix
-		$product    = wc_get_product( $product_id );
+		$product = wc_get_product($product_id);
 		$base_price = $product->get_price();
 
 		$new_price = $this->calculate_total_price(
@@ -590,7 +685,8 @@ class GTRO_WooCommerce {
 			$cart_item_data['gtro_vehicle'] ?? '',
 			$cart_item_data['gtro_extra_laps'] ?? 0,
 			$cart_item_data['gtro_date'] ?? '',
-			isset( $_POST['gtro_options'] ) ? array_map( 'sanitize_text_field', $_POST['gtro_options'] ) : array()
+			isset($_POST['gtro_options']) ? array_map('sanitize_text_field', $_POST['gtro_options']) : array(),
+			$cart_item_data['gtro_formule_option'] ?? ''
 		);
 
 		$cart_item_data['gtro_total_price'] = $new_price;
@@ -598,27 +694,24 @@ class GTRO_WooCommerce {
 		return $cart_item_data;
 	}
 
-	/**
-	 * Valide les données GTRO envoyées par le formulaire
-	 * pour s'assurer qu'elles sont bien remplies.
-	 *
-	 * @param  bool $passed     Si les données sont
-	 *                          valides.
-	 * @param  int  $product_id L'ID du produit.
-	 * @param  int  $quantity   La quantité
-	 *                          du
- produit.
-	 * @return bool Si les données sont valides.
-	 */
-	public function validate_gtro_options( $passed, $product_id, $quantity ) {
-		if ( ! isset( $_POST['gtro_vehicle'] ) || empty( $_POST['gtro_vehicle'] ) ) {
-			wc_add_notice( __( 'Veuillez sélectionner un véhicule', 'gtro-product-manager' ), 'error' );
+	public function validate_gtro_options($passed, $product_id, $quantity) {
+		if (!isset($_POST['gtro_vehicle']) || empty($_POST['gtro_vehicle'])) {
+			wc_add_notice(__('Veuillez sélectionner un véhicule', 'gtro-product-manager'), 'error');
 			$passed = false;
 		}
 
-		if ( ! isset( $_POST['gtro_date'] ) || empty( $_POST['gtro_date'] ) ) {
-			wc_add_notice( __( 'Veuillez sélectionner une date', 'gtro-product-manager' ), 'error' );
+		if (!isset($_POST['gtro_date']) || empty($_POST['gtro_date'])) {
+			wc_add_notice(__('Veuillez sélectionner une date', 'gtro-product-manager'), 'error');
 			$passed = false;
+		}
+
+		// Vérifier si c'est un produit avec formule
+		$max_tours = intval(get_post_meta($product_id, '_gtro_max_tours', true));
+		if ($max_tours === 0) {
+			if (!isset($_POST['gtro_formule_option']) || empty($_POST['gtro_formule_option'])) {
+				wc_add_notice(__('Veuillez sélectionner une option de formule', 'gtro-product-manager'), 'error');
+				$passed = false;
+			}
 		}
 
 		return $passed;
@@ -633,20 +726,24 @@ class GTRO_WooCommerce {
 	 *
 	 * @return array Les données du produit dans le panier avec les données GTRO.
 	 */
-	public function get_cart_item_from_session( $cart_item, $values ) {
-		if ( isset( $values['gtro_vehicle'] ) ) {
+	public function get_cart_item_from_session($cart_item, $values) {
+		if (isset($values['gtro_vehicle'])) {
 			$cart_item['gtro_vehicle'] = $values['gtro_vehicle'];
 		}
 
-		if ( isset( $values['gtro_extra_laps'] ) ) {
+		if (isset($values['gtro_extra_laps'])) {
 			$cart_item['gtro_extra_laps'] = $values['gtro_extra_laps'];
 		}
 
-		if ( isset( $values['gtro_date'] ) ) {
+		if (isset($values['gtro_date'])) {
 			$cart_item['gtro_date'] = $values['gtro_date'];
 		}
 
-		if ( isset( $values['gtro_total_price'] ) ) {
+		if (isset($values['gtro_formule_option'])) {
+			$cart_item['gtro_formule_option'] = $values['gtro_formule_option'];
+		}
+
+		if (isset($values['gtro_total_price'])) {
 			$cart_item['gtro_total_price'] = $values['gtro_total_price'];
 		}
 
@@ -710,11 +807,15 @@ class GTRO_WooCommerce {
 		$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
 		$vehicles_data      = array();
 		foreach ( $available_voitures as $voiture ) {
-			if ( isset( $voiture['modeles'] ) && isset( $voiture['supplement_base'] ) && isset( $voiture['categorie'] ) ) {
-				$vehicles_data[ sanitize_title( $voiture['modeles'] ) ] = array(
-					'supplement_base' => floatval( $voiture['supplement_base'] ),
-					'categorie'       => $voiture['categorie'],
+			if ( isset( $voiture['modeles'] ) && isset( $voiture['categorie'] ) ) {
+				$vehicle_key = sanitize_title( $voiture['modeles'] );
+				$vehicles_data[ $vehicle_key ] = array(
+					'supplement_base' => isset( $voiture['supplement_base'] ) ? floatval( $voiture['supplement_base'] ) : 0,
+					'categorie'      => $voiture['categorie'],
 				);
+				//error_log("Added vehicle: {$vehicle_key} with category: {$voiture['categorie']}");
+			} else {
+				//error_log('Missing required fields for vehicle: ' . print_r($voiture, true));
 			}
 		}
 
@@ -756,17 +857,32 @@ class GTRO_WooCommerce {
 			}
 		}
 
+		// Récupérer les formules et leurs prix
+		$formules_data = array();
+		$formules = rwmb_meta('formules_gtro', array('object_type' => 'setting'), 'gtro_options');
+		if (!empty($formules)) {
+			foreach ($formules as $formule) {
+				if (isset($formule['nom_formule']) && isset($formule['prix_formule'])) {
+					$formule_id = sanitize_title($formule['nom_formule']);
+					$formules_data[$formule_id] = floatval($formule['prix_formule']);
+				}
+			}
+		}
+		//error_log('Available vehicles: ' . print_r($available_voitures, true));
+		//error_log('Processed vehicles data: ' . print_r($vehicles_data, true));
+
 		wp_localize_script(
 			'gtro-public',
 			'gtroData',
 			array(
-				'basePrice'        => floatval( $product->get_price() ),
+				'basePrice'        => floatval($product->get_price()),
 				'vehiclesData'     => $vehicles_data,
 				'categoryPrices'   => $category_prices,
-				'datesPromo'       => empty( $dates_with_promos ) ? array() : $dates_with_promos,
-				'availableOptions' => empty( $available_options ) ? array() : $available_options,
+				'datesPromo'       => empty($dates_with_promos) ? array() : $dates_with_promos,
+				'availableOptions' => empty($available_options) ? array() : $available_options,
 				'showPriceDetails' => true,
-				'maxTours'         => intval( get_post_meta( $product_id, '_gtro_max_tours', true ) ),
+				'maxTours'         => intval(get_post_meta($product_id, '_gtro_max_tours', true)),
+				'formulesData'     => $formules_data  // Ajout des données des formules
 			)
 		);
 	}

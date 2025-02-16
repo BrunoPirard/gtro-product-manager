@@ -211,8 +211,8 @@ class GTRO_Calendar {
 
 		// Générer un calendrier pour chaque mois
 		for ( $month = 1; $month <= 12; $month++ ) {
-			$first_day        = mktime( 0, 0, 0, $month, 1, $year );
-			$number_days      = gmdate( 't', $first_day );
+			$first_day         = mktime( 0, 0, 0, $month, 1, $year );
+			$number_days       = gmdate( 't', $first_day );
 			$first_day_of_week = gmdate( 'w', $first_day );
 
 			$html .= '<div class="month-calendar">';
@@ -236,8 +236,8 @@ class GTRO_Calendar {
 					$html .= '<div class="calendar-cell empty"></div>';
 				} else {
 					$current_date = gmdate( 'Y-m-d', mktime( 0, 0, 0, $month, $day_count, $year ) );
-					$html       .= '<div class="calendar-cell">';
-					$html       .= $dayCount;
+					$html        .= '<div class="calendar-cell">';
+					$html        .= $dayCount;
 
 					// Vérifier si des événements existent pour cette date
 					foreach ( $dates as $event ) {
