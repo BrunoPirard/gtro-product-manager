@@ -1,70 +1,6 @@
-// Au début du fichier, juste après la déclaration des variables globales
-function initializeFromUrl() {
-    // Récupérer les véhicules depuis l'URL ou le localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    const vehiclesParam = urlParams.get("vehicles");
-
-    if (vehiclesParam) {
-        const vehicles = vehiclesParam.split(",");
-        vehicles.forEach((vehicleId) => {
-            if (gtroData.vehiclesData[vehicleId]) {
-                selectedVehicles.push({
-                    id: vehicleId,
-                    name: gtroData.vehiclesData[vehicleId].name,
-                    category: gtroData.vehiclesData[vehicleId].category,
-                });
-
-                // Mettre à jour l'UI
-                $(`.vehicle-card[data-vehicle-id="${vehicleId}"]`).addClass(
-                    "selected"
-                );
-            }
-        });
-
-        // Mettre à jour l'input caché
-        $('input[name="gtro_vehicles"]').val(vehicles.join(","));
-
-        // Mettre à jour le prix
-        updatePrice();
-    }
-}
-
 jQuery(document).ready(function ($) {
-    // Initialiser les véhicules sélectionnés au chargement
-    initializeFromUrl();
-
-    // Ajouter au début du fichier
-    if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.href);
-    }
-
-    // Désactiver la soumission double
-    $("form.cart").on("submit", function () {
-        $(this).find('button[type="submit"]').prop("disabled", true);
-        return true;
-    });
-
     console.log("GTRO Data loaded:", gtroData);
     console.log("Max Tours:", gtroData.maxTours);
-    console.log("GTRO JS initialized"); // Debug
-
-    // Au début du fichier JavaScript
-    $(document).ready(function ($) {
-        // Désactiver temporairement la validation HTML5
-        $("#gtro_vehicle_input").removeAttr("required");
-
-        // Ajouter notre propre validation
-        $("form.cart").on("submit", function (e) {
-            const vehicleValue = $("#gtro_vehicle_input").val();
-            if (!vehicleValue) {
-                e.preventDefault();
-                alert("Veuillez sélectionner un véhicule");
-                $(".gtro-vehicle-selection").addClass("error");
-                return false;
-            }
-            $(".gtro-vehicle-selection").removeClass("error");
-        });
-    });
 
     // Configuration de la sélection multiple
     const vehicleSelection = $(".gtro-vehicle-selection");
@@ -87,9 +23,8 @@ jQuery(document).ready(function ($) {
             const vehicleName = $this.find("h4").text();
             const category = $this.data("category");
 
-            console.log("Vehicle clicked:", vehicleId); // Debug
-
             if (selectionType === "single") {
+                // Comportement existant pour la sélection unique
                 $(".vehicle-card").removeClass("selected");
                 $this.addClass("selected");
                 selectedVehicles = [
@@ -122,54 +57,13 @@ jQuery(document).ready(function ($) {
             updateSelectedVehiclesList();
 
             // Mettre à jour le champ caché
-            const vehicleValue = selectedVehicles.map((v) => v.id).join(",");
-            $("#gtro_vehicle_input").val(vehicleValue);
+            $('input[name="gtro_vehicle"]').val(
+                selectedVehicles.map((v) => v.id).join(",")
+            );
 
-            console.log("Updated vehicle input value:", vehicleValue); // Debug
-            console.log("Current input value:", $("#gtro_vehicle_input").val()); // Debug
-
-            $(".vehicle-counter span").text(selectedVehicles.length);
-            updateSelectedVehiclesList();
+            // Déclencher directement le calcul du prix
             updatePrice();
         });
-
-    // Ajouter une validation du formulaire
-    $("form.cart").on("submit", function (e) {
-        const vehicleValue = $("#gtro_vehicle_input").val();
-        console.log("Form submission - Vehicle value:", vehicleValue); // Debug
-
-        if (!vehicleValue) {
-            e.preventDefault();
-            alert("Veuillez sélectionner un véhicule");
-            console.log("Form submission prevented - No vehicle selected"); // Debug
-            return false;
-        }
-    });
-
-    // Ajouter une fonction de debug
-    function debugVehicleSelection() {
-        console.log("=== Vehicle Selection Debug ===");
-        console.log("Selected vehicles array:", selectedVehicles);
-        console.log("Hidden input value:", $("#gtro_vehicle_input").val());
-        console.log("Selected cards:", $(".vehicle-card.selected").length);
-        console.log("========================");
-    }
-
-    // Appeler le debug après chaque sélection
-    $(".vehicle-card").on("click", function () {
-        setTimeout(debugVehicleSelection, 100);
-    });
-
-    // Mettre à jour l'affichage de debug
-    function updateDebugInfo() {
-        const value = $("#gtro_vehicle_input").val();
-        $(".debug-vehicle-value").text(value || "none");
-    }
-
-    // Appeler après chaque mise à jour
-    $(".vehicle-card").on("click", function () {
-        setTimeout(updateDebugInfo, 100);
-    });
 
     // Fonction pour mettre à jour la liste des véhicules sélectionnés
     function updateSelectedVehiclesList() {
@@ -203,7 +97,7 @@ jQuery(document).ready(function ($) {
         $(".vehicle-counter span").text(selectedVehicles.length);
 
         // Mettre à jour le champ caché et déclencher le calcul du prix
-        $(".gtro-vehicle-input")
+        $('input[name="gtro_vehicle"]')
             .val(selectedVehicles.map((v) => v.id).join(","))
             .trigger("change");
     });
@@ -343,31 +237,27 @@ jQuery(document).ready(function ($) {
             selectedVehicles.map((v) => v.id)
         );
         console.log("Combos disponibles:", gtroData.combosVoitures);
-        console.log("Calculating price with vehicles:", selectedVehicles);
-        console.log("Vehicle data available:", gtroData.vehiclesData);
-        console.log("Category prices:", gtroData.categoryPrices);
 
-        // Initialisation correcte des variables
         let totalPrice = parseFloat(gtroData.basePrice);
-        let vehicleSupplementBase = 0; // Correction : déclaration de la variable
         let totalVehicleSupplementBase = 0;
         let formulePrice = 0;
         let extraLapsPrice = 0;
-        let highestCategory = "1";
+        let highestCategory = "1"; // Catégorie par défaut
 
         // Traitement des véhicules sélectionnés
         selectedVehicles.forEach((vehicle) => {
             if (gtroData.vehiclesData[vehicle.id]) {
                 const vehicleData = gtroData.vehiclesData[vehicle.id];
-                console.log("Processing vehicle:", vehicle, vehicleData);
-
-                if (vehicleData.supplement) {
-                    vehicleSupplementBase += parseFloat(vehicleData.supplement);
-                }
+                console.log("Processing vehicle:", {
+                    id: vehicle.id,
+                    data: vehicleData,
+                    supplement: vehicleData.supplement_base,
+                });
+                totalVehicleSupplementBase += vehicleData.supplement_base || 0;
             }
         });
 
-        totalVehicleSupplementBase = vehicleSupplementBase;
+        // Ajouter le supplément des véhicules au prix total
         totalPrice += totalVehicleSupplementBase;
 
         // Traitement des formules (si pas de tours max)
@@ -383,7 +273,7 @@ jQuery(document).ready(function ($) {
         }
 
         // Calcul des tours supplémentaires pour chaque véhicule
-        if (parseInt(gtroData.maxTours) > 0) {
+        if (gtroData.maxTours > 0) {
             const extraLaps =
                 parseInt($('input[name="gtro_extra_laps"]').val()) || 0;
             if (extraLaps > 0) {
@@ -391,33 +281,28 @@ jQuery(document).ready(function ($) {
                 selectedVehicles.forEach((vehicle) => {
                     if (gtroData.vehiclesData[vehicle.id]) {
                         const vehicleData = gtroData.vehiclesData[vehicle.id];
-                        const category = vehicleData.category; // Changé de categorie à category
-
-                        console.log("Processing extra laps for vehicle:", {
-                            vehicle: vehicle.id,
-                            category: category,
-                            priceData: gtroData.categoryPrices[category],
-                        });
+                        const category = vehicleData.categorie;
 
                         if (category && gtroData.categoryPrices[category]) {
-                            const pricePerLap = parseFloat(
-                                gtroData.categoryPrices[category]
-                            );
+                            const pricePerLap =
+                                gtroData.categoryPrices[category];
                             const vehicleExtraLapsPrice =
                                 extraLaps * pricePerLap;
                             extraLapsPrice += vehicleExtraLapsPrice;
 
-                            console.log("Extra laps calculation:", {
-                                pricePerLap: pricePerLap,
-                                numberOfLaps: extraLaps,
-                                totalForVehicle: vehicleExtraLapsPrice,
-                            });
+                            console.log(
+                                `Tours supplémentaires pour ${vehicle.name}:`,
+                                {
+                                    category: category,
+                                    pricePerLap: pricePerLap,
+                                    total: vehicleExtraLapsPrice,
+                                }
+                            );
                         }
                     }
                 });
 
                 totalPrice += extraLapsPrice;
-                console.log("Total extra laps price added:", extraLapsPrice);
             }
         }
 
@@ -425,6 +310,8 @@ jQuery(document).ready(function ($) {
         let multiVehicleDiscount = 0;
         if (selectedVehicles.length > 1) {
             const nombreVehicules = `${selectedVehicles.length}gt`;
+
+            // Rechercher la remise correspondante dans les données Metabox
             if (
                 gtroData.combosVoitures &&
                 Array.isArray(gtroData.combosVoitures)
@@ -432,10 +319,10 @@ jQuery(document).ready(function ($) {
                 const comboFound = gtroData.combosVoitures.find(
                     (combo) => combo.type_combo === nombreVehicules
                 );
+
                 if (comboFound && comboFound.remise) {
                     const remisePercent = parseFloat(comboFound.remise);
-                    const multiVehicleDiscount =
-                        totalPrice * (remisePercent / 100);
+                    multiVehicleDiscount = totalPrice * (remisePercent / 100);
                     totalPrice -= multiVehicleDiscount;
                     console.log(
                         `Remise multi-véhicules ${nombreVehicules} (${remisePercent}%):`,
@@ -501,12 +388,12 @@ jQuery(document).ready(function ($) {
         console.log("Vehicle supplement:", totalVehicleSupplementBase);
 
         updatePriceDisplays(totalPrice, {
-            basePrice: gtroData.basePrice, // Correction : utilisation directe du prix de base
+            basePrice: formulePrice || gtroData.basePrice,
             vehicleSupplementBase: totalVehicleSupplementBase,
             selectedCategory: highestCategory,
             extraLapsPrice,
             formulePrice,
-            subtotalBeforePromo: totalPrice, // Conservé comme avant
+            subtotalBeforePromo: totalPrice,
             promoAmount,
             optionsDetails,
         });
@@ -515,7 +402,7 @@ jQuery(document).ready(function ($) {
     // Events avec délai pour éviter les calculs trop fréquents
     let updateTimeout;
     $(
-        '.gtro-vehicle-input, input[name="gtro_extra_laps"], select[name="gtro_date"], input[name="gtro_options[]"], select[name="gtro_formule_option"]'
+        'select[name="gtro_vehicle"], input[name="gtro_extra_laps"], select[name="gtro_date"], input[name="gtro_options[]"], select[name="gtro_formule_option"]'
     ).on("change", function () {
         console.log("Change event triggered on:", this.name);
         clearTimeout(updateTimeout);
@@ -527,4 +414,11 @@ jQuery(document).ready(function ($) {
 
     // Initial calculation
     updatePrice();
+
+    // Ajoutez un log avant la soumission du formulaire
+    $("form.cart").on("submit", function () {
+        console.log("Form submitted");
+        console.log("Vehicle:", $('input[name="gtro_vehicle"]').val());
+        console.log("Date:", $('select[name="gtro_date"]').val());
+    });
 });
