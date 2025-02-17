@@ -34,14 +34,16 @@
 	border: 1px solid #ddd;
 	border-radius: 4px;
 	height: auto;
-	min-height: 270px; /* Hauteur fixe pour contenir toutes les lignes */
+	min-height: 270px;
+	/* Hauteur fixe pour contenir toutes les lignes */
 }
 
 .price-details p {
 	margin: 0;
 	padding: 4px 0;
 	line-height: 1.5;
-	height: 28px; /* Hauteur fixe pour chaque ligne */
+	height: 28px;
+	/* Hauteur fixe pour chaque ligne */
 }
 
 .price-details .total {
@@ -64,7 +66,8 @@
 
 .price-details .promo.invisible {
 	visibility: hidden;
-	height: 28px; /* Maintient l'espace */
+	height: 28px;
+	/* Maintient l'espace */
 }
 
 .vehicles-grid {
@@ -150,8 +153,7 @@
 }
 
 .gtro-vehicle-selection.error {
-    border: 2px solid red;
-    padding: 10px;
-    margin: 10px 0;
+	border: 2px solid red;
+	padding: 10px;
+	margin: 10px 0;
 }
-
