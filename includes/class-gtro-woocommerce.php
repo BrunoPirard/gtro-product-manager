@@ -21,7 +21,6 @@ class GTRO_WooCommerce {
 	 */
 	public function __construct() {
 
-		//add_filter( 'pewc_show_totals', '__return_false', 999 ); // Priorité élevée pour s'assurer qu'il s'applique
 		add_action( 'woocommerce_product_data_tabs', array( $this, 'add_gtro_product_tab' ) );
 		add_action( 'woocommerce_product_data_panels', array( $this, 'add_gtro_product_panel' ) );
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_gtro_product_options' ) );
@@ -42,8 +41,6 @@ class GTRO_WooCommerce {
 		add_filter( 'woocommerce_calculate_totals', array( $this, 'calculate_totals' ), 10, 1 );
 
 		// add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
-		// Debug hook
-		// add_action('admin_init', [$this, 'debug_meta_box_data']);
 	}
 
 	/**
@@ -55,27 +52,6 @@ class GTRO_WooCommerce {
 		ob_start();
 		$this->display_gtro_options();
 		return ob_get_clean();
-	}
-
-	/**
-	 * Affiche les groupes de dates et leurs dates associées dans les journaux d'erreurs.
-	 *
-	 * Utile pour déboguer les métadonnées des groupes de dates.
-	 */
-	public function debug_meta_box_data() {
-		error_log( '=== Début Debug GTRO ===' );
-
-		// Debug des groupes de dates
-		$groupes = get_option( 'gtro_groupes_dates', array() );
-		error_log( 'Groupes de dates : ' . print_r( $groupes, true ) );
-
-		// Pour chaque groupe, afficher ses dates
-		foreach ( $groupes as $groupe ) {
-			$dates = rwmb_meta( 'dates_' . sanitize_title( $groupe ), array( 'object_type' => 'setting' ), 'gtro' );
-			error_log( 'Dates pour ' . $groupe . ' : ' . print_r( $dates, true ) );
-		}
-
-		error_log( '=== Fin Debug GTRO ===' );
 	}
 
 	/**
@@ -387,7 +363,7 @@ class GTRO_WooCommerce {
 		echo '<input type="hidden" name="gtro_vehicle" class="gtro-vehicle-input" value="" required>';
 
 		// Sélecteur de dates
-		echo '<div class="gtro-date-selection">';
+		/*echo '<div class="gtro-date-selection">';
 		echo '<h3>' . __( 'Choisir une date', 'gtro-product-manager' ) . '</h3>';
 		echo '<select name="gtro_date">';
 		echo '<option value="">' . __( 'Je choisirais plus tard', 'gtro-product-manager' ) . '</option>';
@@ -402,7 +378,7 @@ class GTRO_WooCommerce {
 			}
 		}
 
-		echo '</select>';
+		echo '</select>';*/
 		echo '</div>';
 
 		// 3. Tours supplémentaires
