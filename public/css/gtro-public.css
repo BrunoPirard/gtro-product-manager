@@ -121,3 +121,37 @@
 		/* 1 colonne sur mobile */
 	}
 }
+
+/* Temp */
+
+.gtro-vehicle-selection {
+	border: 1px solid red;
+	padding: 10px;
+	margin: 10px 0;
+}
+
+.vehicle-card {
+	border: 1px solid blue;
+	padding: 5px;
+	margin: 5px;
+	cursor: pointer;
+}
+
+.vehicle-card.selected {
+	background-color: #e0e0e0;
+	border-color: green;
+}
+
+.debug-info {
+	background: #fff;
+	border: 1px solid #ccc;
+	padding: 5px;
+	margin: 5px 0;
+}
+
+.gtro-vehicle-selection.error {
+    border: 2px solid red;
+    padding: 10px;
+    margin: 10px 0;
+}
+
