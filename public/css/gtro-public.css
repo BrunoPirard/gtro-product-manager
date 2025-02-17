@@ -72,7 +72,7 @@
 	grid-template-columns: repeat(3, 1fr);
 	/* 3 colonnes */
 	gap: 20px;
-	margin-bottom: 30px;
+	/*margin-bottom: 30px;*/
 }
 
 .vehicle-card {
