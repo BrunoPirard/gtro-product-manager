@@ -68,11 +68,11 @@ class GTRO_Settings {
 				'id'          => 'gtro',
 				'menu_title'  => __( 'GTRO Settings', 'gtro-product-manager' ),
 				'option_name' => 'gtro_options',
-				'tabs' => array(
-					'dates'    => __( 'Dates', 'gtro-product-manager' ),
+				'tabs' => array(				
 					'voitures' => __( 'Voitures', 'gtro-product-manager' ),
 					'prix'     => __( 'Prix', 'gtro-product-manager' ),
 					'formules' => __( 'Formules', 'gtro-product-manager' ),
+					'dates'    => __( 'Dates', 'gtro-product-manager' ),
 					'options'  => __( 'Options', 'gtro-product-manager' ),
 				),
 			);
@@ -99,59 +99,6 @@ class GTRO_Settings {
 		// Éviter la duplication en vérifiant si déjà ajouté
 		if ( ! empty( $this->meta_boxes ) ) {
 			return $this->meta_boxes;
-		}
-
-		// Onglet Dates
-		$meta_boxes[] = array(
-			'title'          => __( 'Dates GTRO', 'gtro-product-manager' ),
-			'id'             => 'dates',
-			'settings_pages' => array( 'gtro' ),
-			'tab'            => 'dates',
-			'fields'         => array(
-				array(
-					'name' => __( 'Créer un nouveau groupe de dates', 'gtro-product-manager' ),
-					'id'   => 'nouveau_groupe',
-					'type' => 'text',
-					'desc' => __( 'Entrez un nom pour créer un nouveau groupe de dates (ex: Monoplace, GT)', 'gtro-product-manager' ),
-				),
-			),
-		);
-
-		// Pour chaque groupe existant, on crée dynamiquement une nouvelle metabox
-		$groupes_existants = get_option( 'gtro_groupes_dates', array() ); // Stocke les noms des groupes
-		if ( ! empty( $groupes_existants ) ) {
-			foreach ( $groupes_existants as $groupe ) {
-				$slug         = sanitize_title( $groupe );
-				$meta_boxes[] = array(
-					'title'          => sprintf( __( 'Dates %s', 'gtro-product-manager' ), $groupe ),
-					'id'             => 'dates_' . $slug,
-					'settings_pages' => array( 'gtro' ),
-					'tab'            => 'dates',
-					'fields'         => array(
-						array(
-							'name'       => sprintf( __( 'Dates disponibles - %s', 'gtro-product-manager' ), $groupe ),
-							'id'         => 'dates_' . $slug,
-							'type'       => 'group',
-							'clone'      => true,
-							'sort_clone' => true,
-							'fields'     => array(
-								array(
-									'name' => __( 'Date', 'gtro-product-manager' ),
-									'id'   => 'date',
-									'type' => 'date',
-								),
-								array(
-									'name' => __( 'Promo (%)', 'gtro-product-manager' ),
-									'id'   => 'promo',
-									'type' => 'number',
-									'min'  => 0,
-									'max'  => 100,
-								),
-							),
-						),
-					),
-				);
-			}
 		}
 
 		// Onglet Voitures
@@ -198,7 +145,7 @@ class GTRO_Settings {
 			),
 		);
 
-		// Nouvelle section pour les prix
+		// Onglet Prix
 		$meta_boxes[] = array(
 			'title'          => __( 'Configuration des prix', 'gtro-product-manager' ),
 			'id'             => 'prix-config',
@@ -299,6 +246,59 @@ class GTRO_Settings {
 				),
 			),
 		);
+
+		// Onglet Dates
+		$meta_boxes[] = array(
+			'title'          => __( 'Dates GTRO', 'gtro-product-manager' ),
+			'id'             => 'dates',
+			'settings_pages' => array( 'gtro' ),
+			'tab'            => 'dates',
+			'fields'         => array(
+				array(
+					'name' => __( 'Créer un nouveau groupe de dates', 'gtro-product-manager' ),
+					'id'   => 'nouveau_groupe',
+					'type' => 'text',
+					'desc' => __( 'Entrez un nom pour créer un nouveau groupe de dates (ex: Monoplace, GT)', 'gtro-product-manager' ),
+				),
+			),
+		);
+
+		// Pour chaque groupe existant, on crée dynamiquement une nouvelle metabox
+		$groupes_existants = get_option( 'gtro_groupes_dates', array() ); // Stocke les noms des groupes
+		if ( ! empty( $groupes_existants ) ) {
+			foreach ( $groupes_existants as $groupe ) {
+				$slug         = sanitize_title( $groupe );
+				$meta_boxes[] = array(
+					'title'          => sprintf( __( 'Dates %s', 'gtro-product-manager' ), $groupe ),
+					'id'             => 'dates_' . $slug,
+					'settings_pages' => array( 'gtro' ),
+					'tab'            => 'dates',
+					'fields'         => array(
+						array(
+							'name'       => sprintf( __( 'Dates disponibles - %s', 'gtro-product-manager' ), $groupe ),
+							'id'         => 'dates_' . $slug,
+							'type'       => 'group',
+							'clone'      => true,
+							'sort_clone' => true,
+							'fields'     => array(
+								array(
+									'name' => __( 'Date', 'gtro-product-manager' ),
+									'id'   => 'date',
+									'type' => 'date',
+								),
+								array(
+									'name' => __( 'Promo (%)', 'gtro-product-manager' ),
+									'id'   => 'promo',
+									'type' => 'number',
+									'min'  => 0,
+									'max'  => 100,
+								),
+							),
+						),
+					),
+				);
+			}
+		}
 
 		// Onglet Options
 		$meta_boxes[] = array(
