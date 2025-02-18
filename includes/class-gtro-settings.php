@@ -68,7 +68,7 @@ class GTRO_Settings {
 				'id'          => 'gtro',
 				'menu_title'  => __( 'GTRO Settings', 'gtro-product-manager' ),
 				'option_name' => 'gtro_options',
-				'tabs' => array(				
+				'tabs'        => array(
 					'voitures' => __( 'Voitures', 'gtro-product-manager' ),
 					'prix'     => __( 'Prix', 'gtro-product-manager' ),
 					'formules' => __( 'Formules', 'gtro-product-manager' ),
@@ -213,12 +213,12 @@ class GTRO_Settings {
 			'tab'            => 'formules',
 			'fields'         => array(
 				array(
-					'name'   => __( 'Liste des formules', 'gtro-product-manager' ),
-					'id'     => 'formules_list',
-					'type'   => 'group',
-					'clone'  => true,
+					'name'       => __( 'Liste des formules', 'gtro-product-manager' ),
+					'id'         => 'formules_list',
+					'type'       => 'group',
+					'clone'      => true,
 					'sort_clone' => true,
-					'fields' => array(
+					'fields'     => array(
 						array(
 							'name' => __( 'Nom de la formule', 'gtro-product-manager' ),
 							'id'   => 'nom_formule',
@@ -231,9 +231,9 @@ class GTRO_Settings {
 							'clone'  => true,
 							'fields' => array(
 								array(
-									'name'    => __( 'Nom de l\'option', 'gtro-product-manager' ),
-									'id'      => 'nom_option_formule',
-									'type'    => 'text',
+									'name' => __( 'Nom de l\'option', 'gtro-product-manager' ),
+									'id'   => 'nom_option_formule',
+									'type' => 'text',
 								),
 								array(
 									'name' => __( 'Prix formule', 'gtro-product-manager' ),

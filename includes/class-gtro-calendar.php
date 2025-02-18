@@ -186,13 +186,13 @@ class GTRO_Calendar {
 	 * @param  array $dates Tableau contenant les événements, avec les clés 'date', 'group', 'color' et 'name'.
 	 * @return string Le code HTML du calendrier annuel.
 	 */
-	private function generate_calendar($dates) {
-		$year = gmdate('Y');
+	private function generate_calendar( $dates ) {
+		$year = gmdate( 'Y' );
 		$html = '<div class="custom-calendar-year">';
 
 		// Légende des groupes
 		$html .= '<div class="calendar-legend">';
-		foreach ($this->date_groups as $group_key => $group_info) {
+		foreach ( $this->date_groups as $group_key => $group_info ) {
 			// Légende normale
 			$html .= sprintf(
 				'<div class="legend-item"><span class="color-dot" style="background-color: %s"></span> %s</div>',
@@ -209,38 +209,38 @@ class GTRO_Calendar {
 		$html .= '</div>';
 
 		// Générer un calendrier pour chaque mois
-		for ($month = 1; $month <= 12; $month++) {
-			$first_day = mktime(0, 0, 0, $month, 1, $year);
-			$number_days = gmdate('t', $first_day);
-			$first_day_of_week = gmdate('w', $first_day);
+		for ( $month = 1; $month <= 12; $month++ ) {
+			$first_day         = mktime( 0, 0, 0, $month, 1, $year );
+			$number_days       = gmdate( 't', $first_day );
+			$first_day_of_week = gmdate( 'w', $first_day );
 
 			$html .= '<div class="month-calendar">';
 			$html .= '<div class="month-header">';
-			$html .= '<h3>' . date('F', $first_day) . '</h3>';
+			$html .= '<h3>' . date( 'F', $first_day ) . '</h3>';
 			$html .= '</div>';
 
 			// En-têtes des jours de la semaine
 			$html .= '<div class="calendar-grid">';
-			$days = array('D', 'L', 'M', 'M', 'J', 'V', 'S');
-			foreach ($days as $day) {
+			$days  = array( 'D', 'L', 'M', 'M', 'J', 'V', 'S' );
+			foreach ( $days as $day ) {
 				$html .= '<div class="calendar-header-cell">' . $day . '</div>';
 			}
 
 			// Cases du calendrier
-			$day_count = 1;
+			$day_count   = 1;
 			$total_cells = $first_day_of_week + $number_days;
 
-			for ($i = 0; $i < ceil($total_cells / 7) * 7; $i++) {
-				if ($i < $first_day_of_week || $i >= $total_cells) {
+			for ( $i = 0; $i < ceil( $total_cells / 7 ) * 7; $i++ ) {
+				if ( $i < $first_day_of_week || $i >= $total_cells ) {
 					$html .= '<div class="calendar-cell empty"></div>';
 				} else {
-					$current_date = gmdate('Y-m-d', mktime(0, 0, 0, $month, $day_count, $year));
-					$html .= '<div class="calendar-cell">';
-					$html .= $day_count;
+					$current_date = gmdate( 'Y-m-d', mktime( 0, 0, 0, $month, $day_count, $year ) );
+					$html        .= '<div class="calendar-cell">';
+					$html        .= $day_count;
 
 					// Vérifier si des événements existent pour cette date
-					foreach ($dates as $event) {
-						if ($event['date'] === $current_date) {
+					foreach ( $dates as $event ) {
+						if ( $event['date'] === $current_date ) {
 							$html .= sprintf(
 								'<div class="event-dot" style="background-color: %s" title="%s"></div>',
 								$event['color'],
@@ -250,7 +250,7 @@ class GTRO_Calendar {
 					}
 
 					$html .= '</div>';
-					$day_count++;
+					++$day_count;
 				}
 			}
 
@@ -260,5 +260,4 @@ class GTRO_Calendar {
 		$html .= '</div>'; // Fin du calendrier annuel
 		return $html;
 	}
-
 }
