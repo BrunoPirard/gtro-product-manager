@@ -40,6 +40,12 @@ class GTRO_WooCommerce {
 		add_filter( 'woocommerce_get_price_html', array( $this, 'modify_price_display' ), 10, 2 );
 		add_filter( 'woocommerce_calculate_totals', array( $this, 'calculate_totals' ), 10, 1 );
 
+		add_action('woocommerce_before_calculate_totals', array($this, 'update_cart_item_price'), 10, 1);
+		add_filter('woocommerce_get_item_data', array($this, 'display_cart_item_custom_meta_data'), 10, 2);
+		add_action('woocommerce_checkout_create_order_line_item', array($this, 'add_custom_order_line_item_meta'), 10, 4);
+
+
+
 		// add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
 	}
 
@@ -536,9 +542,9 @@ class GTRO_WooCommerce {
 	private function calculate_total_price($base_price, $vehicle = '', $extra_laps = 0, $selected_date = '', $selected_options = array(), $formule_option = '', $product_id = 0) {
 		$total = $base_price;
 
-		// 1. Ajuster le prix en fonction du/des véhicule(s) sélectionné(s)
+		// 1. Ajuster le prix en fonction du/des véhicules sélectionnés
 		if (!empty($vehicle)) {
-			$vehicles = explode(',', $vehicle); // Pour gérer la sélection multiple
+			$vehicles = explode(',', $vehicle);
 			$available_voitures = rwmb_meta('voitures_gtro', array('object_type' => 'setting'), 'gtro_options');
 			
 			foreach ($vehicles as $selected_vehicle) {
@@ -553,7 +559,7 @@ class GTRO_WooCommerce {
 				}
 			}
 		}
-
+		
 		// 2. Ajouter soit le prix des tours supplémentaires, soit le prix de la formule
 		if (!empty($formule_option)) {
 			// Si une formule est sélectionnée, ajouter son prix
@@ -873,6 +879,79 @@ class GTRO_WooCommerce {
 		}
 
 		return $dates_with_promos;
+	}
+
+	public function update_cart_item_price($cart) {
+		if (is_admin() && !defined('DOING_AJAX')) {
+			return;
+		}
+
+		foreach ($cart->get_cart() as $cart_item) {
+			if (isset($cart_item['gtro_total_price'])) {
+				$cart_item['data']->set_price($cart_item['gtro_total_price']);
+			}
+		}
+	}
+
+	public function display_cart_item_custom_meta_data($item_data, $cart_item) {
+		if (isset($cart_item['gtro_vehicle'])) {
+			$item_data[] = array(
+				'key' => __('Véhicules', 'gtro-product-manager'),
+				'value' => str_replace(',', ', ', $cart_item['gtro_vehicle'])
+			);
+		}
+		
+		if (isset($cart_item['gtro_extra_laps']) && $cart_item['gtro_extra_laps'] > 0) {
+			$item_data[] = array(
+				'key' => __('Tours supplémentaires', 'gtro-product-manager'),
+				'value' => $cart_item['gtro_extra_laps']
+			);
+		}
+
+		if (isset($cart_item['gtro_formule_option'])) {
+			$item_data[] = array(
+				'key' => __('Formule', 'gtro-product-manager'),
+				'value' => $cart_item['gtro_formule_option']
+			);
+		}
+
+		if (isset($cart_item['gtro_date']) && !empty($cart_item['gtro_date'])) {
+			$item_data[] = array(
+				'key' => __('Date', 'gtro-product-manager'),
+				'value' => $cart_item['gtro_date']
+			);
+		}
+
+		if (isset($cart_item['gtro_options']) && !empty($cart_item['gtro_options'])) {
+			$item_data[] = array(
+				'key' => __('Options', 'gtro-product-manager'),
+				'value' => implode(', ', $cart_item['gtro_options'])
+			);
+		}
+
+		return $item_data;
+	}
+
+	public function add_custom_order_line_item_meta($item, $cart_item_key, $values, $order) {
+		if (isset($values['gtro_vehicle'])) {
+			$item->add_meta_data(__('Véhicules', 'gtro-product-manager'), str_replace(',', ', ', $values['gtro_vehicle']));
+		}
+		
+		if (isset($values['gtro_extra_laps']) && $values['gtro_extra_laps'] > 0) {
+			$item->add_meta_data(__('Tours supplémentaires', 'gtro-product-manager'), $values['gtro_extra_laps']);
+		}
+
+		if (isset($values['gtro_formule_option'])) {
+			$item->add_meta_data(__('Formule', 'gtro-product-manager'), $values['gtro_formule_option']);
+		}
+
+		if (isset($values['gtro_date']) && !empty($values['gtro_date'])) {
+			$item->add_meta_data(__('Date', 'gtro-product-manager'), $values['gtro_date']);
+		}
+
+		if (isset($values['gtro_options']) && !empty($values['gtro_options'])) {
+			$item->add_meta_data(__('Options', 'gtro-product-manager'), implode(', ', $values['gtro_options']));
+		}
 	}
 
 	/**
