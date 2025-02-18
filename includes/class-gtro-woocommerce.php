@@ -688,9 +688,9 @@ class GTRO_WooCommerce {
 	 * @return array Les données du produit mises à jour.
 	 */
 	public function add_gtro_options_to_cart($cart_item_data, $product_id, $variation_id) {
-		error_log('=== Début add_gtro_options_to_cart ===');
-		error_log('Product ID: ' . $product_id);
-		error_log('POST Data: ' . print_r($_POST, true));
+		//error_log('=== Début add_gtro_options_to_cart ===');
+		//error_log('Product ID: ' . $product_id);
+		//error_log('POST Data: ' . print_r($_POST, true));
 
 		// Ajouter la vérification du nonce
 		if (!isset($_POST['gtro_nonce']) || !wp_verify_nonce($_POST['gtro_nonce'], 'gtro_add_to_cart')) {
@@ -706,19 +706,19 @@ class GTRO_WooCommerce {
 		// Sauvegarder le véhicule sélectionné
 		if (isset($_POST['gtro_vehicle'])) {
 			$cart_item_data['gtro_vehicle'] = sanitize_text_field($_POST['gtro_vehicle']);
-			error_log('Vehicle: ' . $cart_item_data['gtro_vehicle']);
+			//error_log('Vehicle: ' . $cart_item_data['gtro_vehicle']);
 		}
 
 		// Sauvegarder la date sélectionnée 
 		if (isset($_POST['gtro_date'])) {
 			$cart_item_data['gtro_date'] = sanitize_text_field($_POST['gtro_date']);
-			error_log('Date: ' . $cart_item_data['gtro_date']);
+			//error_log('Date: ' . $cart_item_data['gtro_date']);
 		}
 
 		// Sauvegarder les options sélectionnées
 		if (isset($_POST['gtro_options']) && is_array($_POST['gtro_options'])) {
 			$cart_item_data['gtro_options'] = array_map('sanitize_text_field', $_POST['gtro_options']);
-			error_log('Options: ' . print_r($cart_item_data['gtro_options'], true));
+			//error_log('Options: ' . print_r($cart_item_data['gtro_options'], true));
 		}
 
 		// Vérifier si c'est un produit avec tours supplémentaires ou formule
@@ -727,19 +727,19 @@ class GTRO_WooCommerce {
 		if ($max_tours > 0) {
 			if (isset($_POST['gtro_extra_laps'])) {
 				$cart_item_data['gtro_extra_laps'] = intval($_POST['gtro_extra_laps']);
-				error_log('Extra Laps: ' . $cart_item_data['gtro_extra_laps']);
+				//error_log('Extra Laps: ' . $cart_item_data['gtro_extra_laps']);
 			}
 		} else {
 			if (isset($_POST['gtro_formule_option'])) {
 				$cart_item_data['gtro_formule_option'] = sanitize_text_field($_POST['gtro_formule_option']);
-				error_log('Formule Option: ' . $cart_item_data['gtro_formule_option']);
+				//error_log('Formule Option: ' . $cart_item_data['gtro_formule_option']);
 			}
 		}
 
 		// Calculer le nouveau prix
 		$product = wc_get_product($product_id);
 		if (!$product) {
-			error_log('Product is null in add_gtro_options_to_cart');
+			//error_log('Product is null in add_gtro_options_to_cart');
 		} else {
 			$base_price = $product->get_price();
 
@@ -754,10 +754,10 @@ class GTRO_WooCommerce {
 			);
 
 			$cart_item_data['gtro_total_price'] = $new_price;
-			error_log('Total Price: ' . $new_price);
+			//error_log('Total Price: ' . $new_price);
 		}
 
-		error_log('=== Fin add_gtro_options_to_cart ===');
+		//error_log('=== Fin add_gtro_options_to_cart ===');
 		return $cart_item_data;
 	}
 
@@ -1053,7 +1053,7 @@ class GTRO_WooCommerce {
 				);
 				//error_log("Added vehicle: {$vehicle_key} with category: {$voiture['categorie']}");
 			} else {
-				//error_log('Missing required fields for vehicle: ' . print_r($voiture, true));
+				error_log('Missing required fields for vehicle: ' . print_r($voiture, true));
 			}
 		}
 
