@@ -2,7 +2,6 @@
 namespace GTRO_Plugin;
 
 class GTRO_WooCommerce {
-
 	/**
 	 * Check if Product Addons for WooCommerce is active
 	 *
@@ -816,7 +815,6 @@ class GTRO_WooCommerce {
 		return true;
 	}
 
-
 	/**
 	 * Récupère les données GTRO du produit en session
 	 *
@@ -869,6 +867,15 @@ class GTRO_WooCommerce {
 		return $dates_with_promos;
 	}
 
+	/**
+	 * Met à jour le prix de chaque élément du panier.
+	 *
+	 * Pour chaque élément du panier qui a un prix total GTRO, recalcule le prix total
+	 * en fonction des options sélectionnées (véhicule, date, options, formule, etc.)
+	 * et met à jour le prix de l'élément du panier.
+	 *
+	 * @param WC_Cart $cart Le panier.
+	 */
 	public function update_cart_item_price($cart) {
 		if (is_admin() && !defined('DOING_AJAX')) {
 			return;
@@ -895,6 +902,13 @@ class GTRO_WooCommerce {
 		}
 	}
 
+	/**
+	 * Affiche les métadonnées personnalisées de l'élément du panier
+	 *
+	 * @param array $item_data Les métadonnées de l'élément du panier
+	 * @param array $cart_item Les données de l'élément du panier
+	 * @return array Les métadonnées de l'élément du panier avec les données GTRO
+	 */
 	public function display_cart_item_custom_meta_data($item_data, $cart_item) {
 		if (isset($cart_item['gtro_vehicle'])) {
 			$item_data[] = array(
@@ -934,6 +948,17 @@ class GTRO_WooCommerce {
 		return $item_data;
 	}
 
+	/**
+	 * Ajoute les métadonnées GTRO à la commande.
+	 *
+	 * Récupère les données GTRO du produit et les ajoute
+	 * en tant que métadonnées à la commande.
+	 *
+	 * @param WC_Order_Item $item          L'élément de la commande.
+	 * @param string        $cart_item_key La clé de l'élément du panier.
+	 * @param array         $values        Les valeurs du formulaire GTRO.
+	 * @param WC_Order      $order         La commande.
+	 */
 	public function add_custom_order_line_item_meta($item, $cart_item_key, $values, $order) {
 		if (isset($values['gtro_vehicle'])) {
 			$item->add_meta_data(__('Véhicules', 'gtro-product-manager'), str_replace(',', ', ', $values['gtro_vehicle']));
@@ -956,6 +981,18 @@ class GTRO_WooCommerce {
 		}
 	}
 
+	/**
+	 * Retrieves GTRO item data to display in the cart.
+	 *
+	 * This function adds metadata for vehicles, extra laps, date,
+	 * and additional options for GTRO products in the cart.
+	 * It formats vehicle names and options with the first letter
+	 * capitalized and compiles them into a readable string format.
+	 *
+	 * @param array $item_data Existing item data in the cart.
+	 * @param array $cart_item The cart item containing GTRO data.
+	 * @return array Updated item data with GTRO metadata.
+	 */
 	public function get_item_data($item_data, $cart_item) {
 		if (isset($cart_item['gtro_vehicle'])) {
 			$vehicles = explode(',', $cart_item['gtro_vehicle']);
@@ -990,6 +1027,14 @@ class GTRO_WooCommerce {
 		return $item_data;
 	}
 
+	/**
+	 * Ajoute les métadonnées de l'élément du panier (GTRO) à la commande.
+	 *
+	 * @param WC_Order_Item $item          L'élément de la commande.
+	 * @param string        $cart_item_key La clé de l'élément du panier.
+	 * @param array         $values        Les valeurs du formulaire GTRO.
+	 * @param WC_Order      $order         La commande.
+	 */
 	public function checkout_create_order_line_item($item, $cart_item_key, $values, $order) {
 		if (isset($values['gtro_vehicle'])) {
 			$vehicles = explode(',', $values['gtro_vehicle']);
@@ -1012,7 +1057,6 @@ class GTRO_WooCommerce {
 				implode(', ', array_map('ucfirst', $values['gtro_options'])));
 		}
 	}
-
 
 	/**
 	 * Enqueue scripts and styles for the GTRO product page.
@@ -1150,6 +1194,5 @@ class GTRO_WooCommerce {
 				}
 			});
 		');
-
 	}
 }
