@@ -20,33 +20,32 @@ class GTRO_WooCommerce {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-
-		add_action( 'woocommerce_product_data_tabs', array( $this, 'add_gtro_product_tab' ) );
-		add_action( 'woocommerce_product_data_panels', array( $this, 'add_gtro_product_panel' ) );
-		add_action( 'woocommerce_process_product_meta', array( $this, 'save_gtro_product_options' ) );
-		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'display_gtro_options' ), 5 );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		// add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
+		add_action('woocommerce_product_data_tabs', array($this, 'add_gtro_product_tab'));
+		add_action('woocommerce_product_data_panels', array($this, 'add_gtro_product_panel'));
+		add_action('woocommerce_process_product_meta', array($this, 'save_gtro_product_options'));
+		add_action('woocommerce_before_add_to_cart_button', array($this, 'display_gtro_options'), 5);
+		add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
 
 		// Ajuster la priorité des hooks en fonction de Product Add-ons
-		if ( $this->is_product_addons_active() ) {
-			add_action( 'woocommerce_before_add_to_cart_form', array( $this, 'display_price_details' ), 5 );
+		if ($this->is_product_addons_active()) {
+			add_action('woocommerce_before_add_to_cart_form', array($this, 'display_price_details'), 5);
 		} else {
-			add_action( 'woocommerce_before_add_to_cart_form', array( $this, 'display_price_details' ), 10 );
+			add_action('woocommerce_before_add_to_cart_form', array($this, 'display_price_details'), 10);
 		}
 
-		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'add_gtro_options_to_cart' ), 10, 3 );
-		add_filter( 'woocommerce_get_cart_item_from_session', array( $this, 'get_cart_item_from_session' ), 10, 2 );
-		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_gtro_options' ), 10, 3 );
-		add_filter( 'woocommerce_get_price_html', array( $this, 'modify_price_display' ), 10, 2 );
-		add_filter( 'woocommerce_calculate_totals', array( $this, 'calculate_totals' ), 10, 1 );
-
+		add_filter('woocommerce_add_cart_item_data', array($this, 'add_gtro_options_to_cart'), 10, 3);
+		add_filter('woocommerce_get_cart_item_from_session', array($this, 'get_cart_item_from_session'), 10, 2);
+		add_filter('woocommerce_add_to_cart_validation', array($this, 'validate_gtro_options'), 10, 3);
+		add_filter('woocommerce_get_price_html', array($this, 'modify_price_display'), 10, 2);
+		add_filter('woocommerce_calculate_totals', array($this, 'calculate_totals'), 10, 1);
 		add_action('woocommerce_before_calculate_totals', array($this, 'update_cart_item_price'), 10, 1);
-		add_filter('woocommerce_get_item_data', array($this, 'display_cart_item_custom_meta_data'), 10, 2);
-		add_action('woocommerce_checkout_create_order_line_item', array($this, 'add_custom_order_line_item_meta'), 10, 4);
 
-
-
-		// add_shortcode('gtro_product_options', [$this, 'display_gtro_options_shortcode']);
+		// Utiliser une seule méthode pour afficher les métadonnées du panier
+		add_filter('woocommerce_get_item_data', array($this, 'get_item_data'), 10, 2);
+		
+		// Utiliser une seule méthode pour ajouter les métadonnées à la commande
+		add_action('woocommerce_checkout_create_order_line_item', array($this, 'checkout_create_order_line_item'), 10, 4);
 	}
 
 	/**
@@ -295,6 +294,10 @@ class GTRO_WooCommerce {
 		// Débuter le formulaire avec le nonce de sécurité
 		echo '<div class="gtro-options-form">';
 		wp_nonce_field('gtro_add_to_cart', 'gtro_nonce');
+		 echo '<input type="hidden" name="gtro_action" value="add_to_cart">';
+    
+		// Ajouter cette ligne pour empêcher la résoumission
+		echo '<input type="hidden" name="form_submitted" value="' . time() . '">';
 
 		// 1. SECTION SÉLECTION DES VÉHICULES
 		$selection_type = get_post_meta($product->get_id(), '_gtro_vehicle_selection_type', true) ?: 'single';
@@ -462,9 +465,10 @@ class GTRO_WooCommerce {
 		}
 
 		// Fermer le formulaire
-		echo '</div>'; // Ferme gtro-options-form
-	}
+		echo '<input type="hidden" name="gtro_action" value="add_to_cart">'; // Ajout d'un champ de contrôle
+    	echo '</div>';
 
+	}
 
 	/**
 	 * Affiche les options supplémentaires dans le panier
@@ -559,7 +563,7 @@ class GTRO_WooCommerce {
 				}
 			}
 		}
-		
+
 		// 2. Ajouter soit le prix des tours supplémentaires, soit le prix de la formule
 		if (!empty($formule_option)) {
 			// Si une formule est sélectionnée, ajouter son prix
@@ -766,9 +770,15 @@ class GTRO_WooCommerce {
 	 * @return bool Si la validation est passée.
 	 */
 	public function validate_gtro_options($passed, $product_id, $quantity) {
-		error_log('=== Début validate_gtro_options ===');
-		error_log('Product ID: ' . $product_id);
-		error_log('POST Data: ' . print_r($_POST, true));
+		// Vérifier si c'est une soumission de formulaire
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			return $passed;
+		}
+
+		// Vérifier si c'est une action d'ajout au panier intentionnelle
+		if (!isset($_POST['gtro_action']) || $_POST['gtro_action'] !== 'add_to_cart' || !isset($_POST['add-to-cart'])) {
+			return $passed;
+		}
 
 		// Vérifier le nonce
 		if (!isset($_POST['gtro_nonce']) || !wp_verify_nonce($_POST['gtro_nonce'], 'gtro_add_to_cart')) {
@@ -788,15 +798,10 @@ class GTRO_WooCommerce {
 			return false;
 		}
 
-
-		if (!isset($_POST['gtro_vehicle']) || empty($_POST['gtro_vehicle'])) {
-			wc_add_notice(__('Veuillez sélectionner un véhicule', 'gtro-product-manager'), 'error');
-			$passed = false;
-		}
-
+		// Vérifier la date
 		if (!isset($_POST['gtro_date']) || empty($_POST['gtro_date'])) {
 			wc_add_notice(__('Veuillez sélectionner une date', 'gtro-product-manager'), 'error');
-			$passed = false;
+			return false;
 		}
 
 		// Vérifier si c'est un produit avec formule
@@ -804,15 +809,13 @@ class GTRO_WooCommerce {
 		if ($max_tours === 0) {
 			if (!isset($_POST['gtro_formule_option']) || empty($_POST['gtro_formule_option'])) {
 				wc_add_notice(__('Veuillez sélectionner une option de formule', 'gtro-product-manager'), 'error');
-				$passed = false;
+				return false;
 			}
 		}
 
-		error_log('Validation Passed: ' . ($passed ? 'true' : 'false'));
-		error_log('=== Fin validate_gtro_options ===');
-
 		return true;
 	}
+
 
 	/**
 	 * Récupère les données GTRO du produit en session
@@ -822,36 +825,21 @@ class GTRO_WooCommerce {
 	 * @return array Les données du produit dans le panier avec les données GTRO.
 	 */
 	public function get_cart_item_from_session($cart_item, $values) {
-		error_log('=== Début get_cart_item_from_session ===');
-		error_log('Cart Item: ' . print_r($cart_item, true));
-		error_log('Values: ' . print_r($values, true));
-
+		// Récupérer les données sauvegardées
 		if (isset($values['gtro_vehicle'])) {
 			$cart_item['gtro_vehicle'] = $values['gtro_vehicle'];
+			$cart_item['gtro_date'] = $values['gtro_date'] ?? '';
+			$cart_item['gtro_options'] = $values['gtro_options'] ?? array();
+			$cart_item['gtro_extra_laps'] = $values['gtro_extra_laps'] ?? 0;
+			$cart_item['gtro_formule_option'] = $values['gtro_formule_option'] ?? '';
+			$cart_item['gtro_total_price'] = $values['gtro_total_price'] ?? 0;
+
+			// Recalculer le prix total
+			if ($cart_item['gtro_total_price'] > 0) {
+				$cart_item['data']->set_price($cart_item['gtro_total_price']);
+			}
 		}
 
-		if (isset($values['gtro_extra_laps'])) {
-			$cart_item['gtro_extra_laps'] = $values['gtro_extra_laps'];
-		}
-
-		if (isset($values['gtro_date'])) {
-			$cart_item['gtro_date'] = $values['gtro_date'];
-		}
-
-		if (isset($values['gtro_options'])) {
-			$cart_item['gtro_options'] = $values['gtro_options'];
-		}
-
-		if (isset($values['gtro_formule_option'])) {
-			$cart_item['gtro_formule_option'] = $values['gtro_formule_option'];
-		}
-
-		if (isset($values['gtro_total_price'])) {
-			$cart_item['gtro_total_price'] = $values['gtro_total_price'];
-		}
-
-		error_log('Updated Cart Item: ' . print_r($cart_item, true));
-		error_log('=== Fin get_cart_item_from_session ===');
 		return $cart_item;
 	}
 
@@ -886,9 +874,23 @@ class GTRO_WooCommerce {
 			return;
 		}
 
-		foreach ($cart->get_cart() as $cart_item) {
+		foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
 			if (isset($cart_item['gtro_total_price'])) {
-				$cart_item['data']->set_price($cart_item['gtro_total_price']);
+				// Recalculer le prix total
+				$product = $cart_item['data'];
+				$base_price = $product->get_regular_price();
+				
+				$new_price = $this->calculate_total_price(
+					$base_price,
+					$cart_item['gtro_vehicle'] ?? '',
+					$cart_item['gtro_extra_laps'] ?? 0,
+					$cart_item['gtro_date'] ?? '',
+					$cart_item['gtro_options'] ?? array(),
+					$cart_item['gtro_formule_option'] ?? '',
+					$cart_item['product_id']
+				);
+				
+				$cart_item['data']->set_price($new_price);
 			}
 		}
 	}
@@ -953,6 +955,64 @@ class GTRO_WooCommerce {
 			$item->add_meta_data(__('Options', 'gtro-product-manager'), implode(', ', $values['gtro_options']));
 		}
 	}
+
+	public function get_item_data($item_data, $cart_item) {
+		if (isset($cart_item['gtro_vehicle'])) {
+			$vehicles = explode(',', $cart_item['gtro_vehicle']);
+			$item_data[] = array(
+				'key' => __('Véhicules', 'gtro-product-manager'),
+				'value' => implode(', ', array_map('ucfirst', $vehicles))
+			);
+		}
+
+		// Ajouter les autres données
+		if (isset($cart_item['gtro_extra_laps']) && $cart_item['gtro_extra_laps'] > 0) {
+			$item_data[] = array(
+				'key' => __('Tours supplémentaires', 'gtro-product-manager'),
+				'value' => $cart_item['gtro_extra_laps']
+			);
+		}
+
+		if (isset($cart_item['gtro_date']) && !empty($cart_item['gtro_date'])) {
+			$item_data[] = array(
+				'key' => __('Date', 'gtro-product-manager'),
+				'value' => $cart_item['gtro_date']
+			);
+		}
+
+		if (isset($cart_item['gtro_options']) && !empty($cart_item['gtro_options'])) {
+			$item_data[] = array(
+				'key' => __('Options', 'gtro-product-manager'),
+				'value' => implode(', ', array_map('ucfirst', $cart_item['gtro_options']))
+			);
+		}
+
+		return $item_data;
+	}
+
+	public function checkout_create_order_line_item($item, $cart_item_key, $values, $order) {
+		if (isset($values['gtro_vehicle'])) {
+			$vehicles = explode(',', $values['gtro_vehicle']);
+			$item->add_meta_data(__('Véhicules', 'gtro-product-manager'), 
+				implode(', ', array_map('ucfirst', $vehicles)));
+		}
+
+		if (isset($values['gtro_extra_laps']) && $values['gtro_extra_laps'] > 0) {
+			$item->add_meta_data(__('Tours supplémentaires', 'gtro-product-manager'), 
+				$values['gtro_extra_laps']);
+		}
+
+		if (isset($values['gtro_date']) && !empty($values['gtro_date'])) {
+			$item->add_meta_data(__('Date', 'gtro-product-manager'), 
+				$values['gtro_date']);
+		}
+
+		if (isset($values['gtro_options']) && !empty($values['gtro_options'])) {
+			$item->add_meta_data(__('Options', 'gtro-product-manager'), 
+				implode(', ', array_map('ucfirst', $values['gtro_options'])));
+		}
+	}
+
 
 	/**
 	 * Enqueue scripts and styles for the GTRO product page.
@@ -1078,5 +1138,18 @@ class GTRO_WooCommerce {
 				'combosVoitures'   => $combos_voitures  
 			)
 		);
+		wp_add_inline_script('gtro-public', '
+			if (window.history.replaceState) {
+				window.history.replaceState(null, null, window.location.href);
+			}
+			
+			// Désactiver la résoumission du formulaire
+			window.addEventListener("pageshow", function(event) {
+				if (event.persisted) {
+					window.location.reload();
+				}
+			});
+		');
+
 	}
 }
