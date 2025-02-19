@@ -21,6 +21,29 @@ class GTRO_Settings {
 		add_filter( 'rwmb_meta_boxes', array( $this, 'register_settings_fields' ), 10, 1 );
 		add_filter( 'mb_settings_pages', array( $this, 'register_settings_pages' ), 10, 1 );
 		add_action( 'rwmb_after_save_post', array( $this, 'handle_new_group' ), 10, 2 );
+
+		// Ajouter un filtre pour mettre à jour dynamiquement les options des selects
+    	add_filter('rwmb_select_options', array($this, 'update_category_options'), 10, 2);
+	}
+
+	/**
+	 * Updates the options for category-related select fields.
+	 *
+	 * This function checks if the provided field is a category or type combo
+	 * field. If it is, it retrieves and returns the updated category options.
+	 * Otherwise, it returns the original options.
+	 *
+	 * @param array $options The original options for the select field.
+	 * @param array $field   The field data containing the field ID.
+	 * @return array Updated options if the field is category-related, otherwise
+	 *               the original options.
+	 */
+	public function update_category_options($options, $field) {
+		// Vérifier si c'est un champ de catégorie
+		if (in_array($field['id'], ['categorie', 'type_combo'])) {
+			return $this->get_categories_options();
+		}
+		return $options;
 	}
 
 	/**
@@ -62,18 +85,19 @@ class GTRO_Settings {
 	 *
 	 * @since 1.0.0
 	 */
-	public function register_settings_pages( $settings_pages ) {
-		if ( ! isset( $settings_pages['gtro'] ) ) {
+	public function register_settings_pages($settings_pages) {
+		if (!isset($settings_pages['gtro'])) {
 			$settings_pages['gtro'] = array(
 				'id'          => 'gtro',
-				'menu_title'  => __( 'GTRO Settings', 'gtro-product-manager' ),
+				'menu_title'  => __('GTRO Settings', 'gtro-product-manager'),
 				'option_name' => 'gtro_options',
 				'tabs'        => array(
-					'voitures' => __( 'Voitures', 'gtro-product-manager' ),
-					'prix'     => __( 'Prix', 'gtro-product-manager' ),
-					'formules' => __( 'Formules', 'gtro-product-manager' ),
-					'dates'    => __( 'Dates', 'gtro-product-manager' ),
-					'options'  => __( 'Options', 'gtro-product-manager' ),
+					'voitures'   => __('Voitures', 'gtro-product-manager'),
+					'prix'       => __('Prix', 'gtro-product-manager'),
+					'formules'   => __('Formules', 'gtro-product-manager'),
+					'dates'      => __('Dates', 'gtro-product-manager'),
+					'options'    => __('Options', 'gtro-product-manager'),
+					'categories' => __('Categories', 'gtro-product-manager'), // Nouvel onglet
 				),
 			);
 		}
@@ -133,12 +157,7 @@ class GTRO_Settings {
 							'name'    => __( 'Catégorie', 'gtro-product-manager' ),
 							'id'      => 'categorie',
 							'type'    => 'select',
-							'options' => array(
-								'cat1' => __( 'Catégorie 1', 'gtro-product-manager' ),
-								'cat2' => __( 'Catégorie 2', 'gtro-product-manager' ),
-								'cat3' => __( 'Catégorie 3', 'gtro-product-manager' ),
-								'catn' => __( 'Catégorie N', 'gtro-product-manager' ),
-							),
+							'options' => $this->get_categories_options(),
 						),
 					),
 				),
@@ -162,12 +181,7 @@ class GTRO_Settings {
 							'name'    => __( 'Catégorie', 'gtro-product-manager' ),
 							'id'      => 'categorie',
 							'type'    => 'select',
-							'options' => array(
-								'cat1' => __( 'Catégorie 1', 'gtro-product-manager' ),
-								'cat2' => __( 'Catégorie 2', 'gtro-product-manager' ),
-								'cat3' => __( 'Catégorie 3', 'gtro-product-manager' ),
-								'catn' => __( 'Catégorie N', 'gtro-product-manager' ),
-							),
+							'options' => $this->get_categories_options(),
 						),
 						array(
 							'name' => __( 'Prix tour supplémentaire', 'gtro-product-manager' ),
@@ -186,11 +200,7 @@ class GTRO_Settings {
 							'name'    => __( 'Type de combo', 'gtro-product-manager' ),
 							'id'      => 'type_combo',
 							'type'    => 'select',
-							'options' => array(
-								'2gt' => __( '2 GT', 'gtro-product-manager' ),
-								'3gt' => __( '3 GT', 'gtro-product-manager' ),
-								'4gt' => __( '4 GT', 'gtro-product-manager' ),
-							),
+							'options' => $this->get_categories_options(),
 						),
 						array(
 							'name' => __( 'Remise (%)', 'gtro-product-manager' ),
@@ -328,6 +338,58 @@ class GTRO_Settings {
 			),
 		);
 
+		// Onglet Categories
+		$meta_boxes[] = array(
+			'title'          => __('Gestion des catégories', 'gtro-product-manager'),
+			'id'             => 'categories',
+			'settings_pages' => array('gtro'),
+			'tab'            => 'categories',
+			'fields'         => array(
+				array(
+					'name'       => __('Liste des catégories', 'gtro-product-manager'),
+					'id'         => 'categories_list',
+					'type'       => 'group',
+					'clone'      => true,
+					'sort_clone' => true,
+					'fields'     => array(
+						array(
+							'name' => __('Nom de la catégorie', 'gtro-product-manager'),
+							'id'   => 'nom_categorie',
+							'type' => 'text',
+						),
+					),
+				),
+			),
+		);
+
 		return $meta_boxes;
+	}
+
+	/**
+	 * Retrieve category options from the settings.
+	 *
+	 * This function fetches the list of categories stored in the GTRO settings
+	 * and constructs an associative array of category slugs mapped to their names.
+	 * Each category name is sanitized to create a unique slug.
+	 *
+	 * @return array An associative array of category slugs as keys and their
+	 *               respective names as values.
+	 */
+	private function get_categories_options() {
+		$options = array('' => __('Sélectionnez une catégorie', 'gtro-product-manager'));
+		
+		// Récupérer les catégories depuis les options
+		$settings = get_option('gtro_options');
+		
+		if (!empty($settings['categories_list'])) {
+			foreach ($settings['categories_list'] as $categorie) {
+				if (!empty($categorie['nom_categorie'])) {
+					$slug = sanitize_title($categorie['nom_categorie']);
+					$options[$slug] = $categorie['nom_categorie'];
+				}
+			}
+		}
+		
+		return $options;
 	}
 }
