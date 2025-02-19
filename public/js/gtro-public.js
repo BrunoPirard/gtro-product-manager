@@ -128,6 +128,17 @@ jQuery(document).ready(function ($) {
         console.log("Price details:", details);
 
         const formattedPrice = formatPrice(price);
+        const priceDetails = [];
+
+        if (gtroData.comboDiscount > 0) {
+            const comboDiscountAmount =
+                details.subtotalBeforePromo * (gtroData.comboDiscount / 100);
+            priceDetails.push(
+                `<p class="combo-discount">Remise DUO (-${
+                    gtroData.comboDiscount
+                }%): -${formatPrice(comboDiscountAmount)}</p>`
+            );
+        }
 
         // Mettre à jour le prix total GTRO
         $(".gtro-total-price").html(formattedPrice);
@@ -179,6 +190,17 @@ jQuery(document).ready(function ($) {
                 )}</p>`
             );
         }
+
+        // Afficher la remise si elle existe
+        /*if (gtroData.comboDiscount > 0) {
+            const comboDiscountAmount =
+                details.subtotalBeforePromo * (gtroData.comboDiscount / 100);
+            priceDetails.push(
+                `<p class="combo-discount">Remise (-${
+                    gtroData.comboDiscount
+                }%): -${formatPrice(comboDiscountAmount)}</p>`
+            );
+        }*/
 
         // Sous-total avant promo
         priceDetails.push(
@@ -236,7 +258,6 @@ jQuery(document).ready(function ($) {
             "Vehicle IDs:",
             selectedVehicles.map((v) => v.id)
         );
-        console.log("Combos disponibles:", gtroData.combosVoitures);
 
         let totalPrice = parseFloat(gtroData.basePrice);
         let totalVehicleSupplementBase = 0;
@@ -306,33 +327,21 @@ jQuery(document).ready(function ($) {
             }
         }
 
-        // Appliquer la remise multi-véhicules si applicable
-        let multiVehicleDiscount = 0;
-        if (selectedVehicles.length > 1) {
-            const nombreVehicules = `${selectedVehicles.length}gt`;
+        // Avant d'appliquer la remise
+        console.log("Prix avant remise:", totalPrice);
+        console.log("Remise configurée:", gtroData.comboDiscount);
 
-            // Rechercher la remise correspondante dans les données Metabox
-            if (
-                gtroData.combosVoitures &&
-                Array.isArray(gtroData.combosVoitures)
-            ) {
-                const comboFound = gtroData.combosVoitures.find(
-                    (combo) => combo.type_combo === nombreVehicules
-                );
-
-                if (comboFound && comboFound.remise) {
-                    const remisePercent = parseFloat(comboFound.remise);
-                    multiVehicleDiscount = totalPrice * (remisePercent / 100);
-                    totalPrice -= multiVehicleDiscount;
-                    console.log(
-                        `Remise multi-véhicules ${nombreVehicules} (${remisePercent}%):`,
-                        multiVehicleDiscount
-                    );
-                }
-            }
+        if (gtroData.comboDiscount > 0) {
+            const comboDiscount = totalPrice * (gtroData.comboDiscount / 100);
+            totalPrice -= comboDiscount;
+            console.log(
+                `Remise appliquée (${gtroData.comboDiscount}%):`,
+                comboDiscount
+            );
+            console.log("Prix après remise:", totalPrice);
         }
 
-        // Sous-total avant promotion
+        // Sous-total avant promotion DATES
         const subtotalBeforePromo = totalPrice;
         console.log("Subtotal before promo:", subtotalBeforePromo);
 

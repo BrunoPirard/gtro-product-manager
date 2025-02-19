@@ -106,15 +106,52 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @access private
 		 */
 		private function define_admin_hooks() {
-			$plugin_admin = new GTRO_Admin( $this->get_plugin_name(), $this->get_version() );
+			$plugin_admin = new GTRO_Admin($this->get_plugin_name(), $this->get_version());
 
-			$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
-			$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+			$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_styles');
+			$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
+
+			// Désactiver les produits variables
+			$this->loader->add_filter('product_type_selector', $this, 'remove_variable_product_type');
+			$this->loader->add_action('admin_head', $this, 'hide_variable_product_options');
+			$this->loader->add_filter('woocommerce_ajax_variation_threshold', $this, 'disable_variations');
 
 			// Initialiser l'intégration WooCommerce si WooCommerce est actif
-			if ( class_exists( 'WooCommerce' ) ) {
+			if (class_exists('WooCommerce')) {
 				new GTRO_WooCommerce();
 			}
+		}
+
+		/**
+		 * Remove variable product type from product type selector
+		 *
+		 * @param array $types Product types
+		 * @return array Modified product types
+		 */
+		public function remove_variable_product_type($types) {
+			unset($types['variable']);
+			return $types;
+		}
+
+		/**
+		 * Hide variable product options in admin
+		 */
+		public function hide_variable_product_options() {
+			echo '<style>
+				.show_if_variable,
+				.variable_product_options {
+					display: none !important;
+				}
+			</style>';
+		}
+
+		/**
+		 * Disable variations completely
+		 *
+		 * @return int
+		 */
+		public function disable_variations() {
+			return 0;
 		}
 
 		private function define_public_hooks() {

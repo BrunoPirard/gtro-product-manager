@@ -194,6 +194,26 @@ class GTRO_WooCommerce {
 				}
 			}
 			echo '</div>';
+
+			// Après la section des options, ajoutez :
+			echo '<div class="options-group">';
+			echo '<h4>' . __('Promotion combo', 'gtro-product-manager') . '</h4>';
+
+			// Récupérer les combos
+			$available_combos = rwmb_meta('combos_list', array('object_type' => 'setting'), 'gtro_options');
+			if (!empty($available_combos)) {
+				woocommerce_wp_select(
+					array(
+						'id'          => '_gtro_combo_promo',
+						'label'       => __('Promo combo', 'gtro-product-manager'),
+						'description' => __('Sélectionnez une promotion combo', 'gtro-product-manager'),
+						'desc_tip'    => true,
+						'options'     => $this->get_combos_options(),
+					)
+				);
+			}
+			echo '</div>';
+
 			?>
 		</div>
 		<?php
@@ -214,6 +234,14 @@ class GTRO_WooCommerce {
 				$post_id,
 				'_gtro_vehicle_selection_type',
 				sanitize_text_field( $_POST['_gtro_vehicle_selection_type'] )
+			);
+		}
+
+		if (isset($_POST['_gtro_combo_promo'])) {
+			update_post_meta(
+				$post_id,
+				'_gtro_combo_promo',
+				sanitize_text_field($_POST['_gtro_combo_promo'])
 			);
 		}
 
@@ -270,6 +298,29 @@ class GTRO_WooCommerce {
 			$options[ sanitize_title( $groupe ) ] = $groupe;
 		}
 
+		return $options;
+	}
+
+	/**
+	 * Récupère la liste des combos disponibles pour le select
+	 *
+	 * @return array
+	 */
+	private function get_combos_options() {
+		$options = array('' => __('Sélectionner un combo', 'gtro-product-manager'));
+		
+		// Récupérer les combos depuis les options
+		$settings = get_option('gtro_options');
+		
+		if (!empty($settings['combos_list'])) {
+			foreach ($settings['combos_list'] as $combo) {
+				if (!empty($combo['nom_combo'])) {
+					$slug = sanitize_title($combo['nom_combo']);
+					$options[$slug] = $combo['nom_combo'];
+				}
+			}
+		}
+		
 		return $options;
 	}
 
@@ -1158,19 +1209,27 @@ class GTRO_WooCommerce {
 				}
 			}
 		}
-		// error_log('Available vehicles: ' . print_r($available_voitures, true));
-		// error_log('Processed vehicles data: ' . print_r($vehicles_data, true));
 
-		// Récupérer les combos multi-voitures et leurs remises
-		$combos_voitures = array();
-		$combos          = rwmb_meta( 'combos_voitures', array( 'object_type' => 'setting' ), 'gtro_options' );
-		if ( ! empty( $combos ) ) {
-			foreach ( $combos as $combo ) {
-				if ( isset( $combo['type_combo'] ) && isset( $combo['remise'] ) ) {
-					$combos_voitures[] = array(
-						'type_combo' => $combo['type_combo'],
-						'remise'     => floatval( $combo['remise'] ),
-					);
+		// Récupérer le combo sélectionné pour ce produit
+		$selected_combo = get_post_meta($product_id, '_gtro_combo_promo', true);
+		$combo_discount = 0;
+
+		// Récupérer les combos depuis les métaboxes
+		$combos_list = rwmb_meta('combos_voitures', array('object_type' => 'setting'), 'gtro_options');
+
+		// Debug
+		error_log('Selected combo: ' . $selected_combo);
+		error_log('Combos list: ' . print_r($combos_list, true));
+
+		// Vérifier si le combo existe et récupérer sa remise
+		if (!empty($combos_list) && !empty($selected_combo)) {
+			foreach ($combos_list as $combo) {
+				if (isset($combo['nom_promo_combo']) && 
+					sanitize_title($combo['nom_promo_combo']) === $selected_combo && 
+					isset($combo['remise'])) {
+					$combo_discount = floatval($combo['remise']);
+					error_log('Found combo discount: ' . $combo_discount);
+					break;
 				}
 			}
 		}
@@ -1179,17 +1238,18 @@ class GTRO_WooCommerce {
 			'gtro-public',
 			'gtroData',
 			array(
-				'basePrice'        => floatval( $product->get_price() ),
-				'vehiclesData'     => $vehicles_data,
-				'categoryPrices'   => $category_prices,
-				'datesPromo'       => empty( $dates_with_promos ) ? array() : $dates_with_promos,
-				'availableOptions' => empty( $available_options ) ? array() : $available_options,
+				'basePrice' => floatval($product->get_price()),
+				'vehiclesData' => $vehicles_data,
+				'categoryPrices' => $category_prices,
+				'datesPromo' => empty($dates_with_promos) ? array() : $dates_with_promos,
+				'availableOptions' => empty($available_options) ? array() : $available_options,
 				'showPriceDetails' => true,
-				'maxTours'         => intval( get_post_meta( $product_id, '_gtro_max_tours', true ) ),
-				'formulesData'     => $formules_data,
-				'combosVoitures'   => $combos_voitures,
+				'maxTours' => intval(get_post_meta($product_id, '_gtro_max_tours', true)),
+				'formulesData' => $formules_data,
+				'comboDiscount' => $combo_discount // Assurez-vous que cette valeur est bien passée
 			)
 		);
+
 		wp_add_inline_script(
 			'gtro-public',
 			'
