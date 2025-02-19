@@ -27,22 +27,24 @@ class GTRO_Settings {
 	}
 
 	/**
-	 * Updates the options for category-related select fields.
-	 *
-	 * This function checks if the provided field is a category or type combo
-	 * field. If it is, it retrieves and returns the updated category options.
-	 * Otherwise, it returns the original options.
+	 * Updates the options for category and combo select fields.
 	 *
 	 * @param array $options The original options for the select field.
 	 * @param array $field   The field data containing the field ID.
-	 * @return array Updated options if the field is category-related, otherwise
+	 * @return array Updated options if the field is category or combo related, otherwise
 	 *               the original options.
 	 */
 	public function update_category_options($options, $field) {
 		// Vérifier si c'est un champ de catégorie
-		if (in_array($field['id'], ['categorie', 'type_combo'])) {
+		if ($field['id'] === 'categorie') {
 			return $this->get_categories_options();
 		}
+		
+		// Vérifier si c'est un champ de combo
+		if ($field['id'] === 'nom_promo_combo') {
+			return $this->get_combos_options();
+		}
+		
 		return $options;
 	}
 
@@ -97,7 +99,10 @@ class GTRO_Settings {
 					'formules'   => __('Formules', 'gtro-product-manager'),
 					'dates'      => __('Dates', 'gtro-product-manager'),
 					'options'    => __('Options', 'gtro-product-manager'),
-					'categories' => __('Categories', 'gtro-product-manager'), // Nouvel onglet
+					'categories' => array(
+						'label' => __('Catégories et Combos', 'gtro-product-manager'),
+						'icon'  => 'dashicons-category',
+					),
 				),
 			);
 		}
@@ -197,14 +202,14 @@ class GTRO_Settings {
 					'clone'  => true,
 					'fields' => array(
 						array(
-							'name'    => __( 'Type de combo', 'gtro-product-manager' ),
-							'id'      => 'type_combo',
+							'name'    => __( 'Nom promo combo', 'gtro-product-manager' ),
+							'id'      => 'nom_promo_combo',
 							'type'    => 'select',
-							'options' => $this->get_categories_options(),
+							'options' => $this->get_combos_options(),
 						),
 						array(
 							'name' => __( 'Remise (%)', 'gtro-product-manager' ),
-							'id'   => 'remise',  // Changé de 'Remise Multi' à 'remise'
+							'id'   => 'remise',  
 							'type' => 'number',
 							'step' => '0.5',
 							'min'  => '0',
@@ -340,7 +345,7 @@ class GTRO_Settings {
 
 		// Onglet Categories
 		$meta_boxes[] = array(
-			'title'          => __('Gestion des catégories', 'gtro-product-manager'),
+			'title'          => __('Gestion des catégories et combos', 'gtro-product-manager'),
 			'id'             => 'categories',
 			'settings_pages' => array('gtro'),
 			'tab'            => 'categories',
@@ -355,6 +360,20 @@ class GTRO_Settings {
 						array(
 							'name' => __('Nom de la catégorie', 'gtro-product-manager'),
 							'id'   => 'nom_categorie',
+							'type' => 'text',
+						),
+					),
+				),
+				array(
+					'name'       => __('Liste des combos', 'gtro-product-manager'),
+					'id'         => 'combos_list',
+					'type'       => 'group',
+					'clone'      => true,
+					'sort_clone' => true,
+					'fields'     => array(
+						array(
+							'name' => __('Nom du combo', 'gtro-product-manager'),
+							'id'   => 'nom_combo',
 							'type' => 'text',
 						),
 					),
@@ -386,6 +405,29 @@ class GTRO_Settings {
 				if (!empty($categorie['nom_categorie'])) {
 					$slug = sanitize_title($categorie['nom_categorie']);
 					$options[$slug] = $categorie['nom_categorie'];
+				}
+			}
+		}
+		
+		return $options;
+	}
+
+	/**
+	 * Récupère la liste des combos disponibles
+	 *
+	 * @return array
+	 */
+	private function get_combos_options() {
+		$options = array('' => __('Sélectionner un combo', 'gtro-product-manager'));
+		
+		// Récupérer les combos depuis les options
+		$settings = get_option('gtro_options');
+		
+		if (!empty($settings['combos_list'])) {
+			foreach ($settings['combos_list'] as $combo) {
+				if (!empty($combo['nom_combo'])) {
+					$slug = sanitize_title($combo['nom_combo']);
+					$options[$slug] = $combo['nom_combo'];
 				}
 			}
 		}
