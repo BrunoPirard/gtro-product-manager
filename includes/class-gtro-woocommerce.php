@@ -460,21 +460,20 @@ class GTRO_WooCommerce {
 		}
 
 		// 3. SECTION SÉLECTION DE DATE
-		$selected_group = get_post_meta($product_id, '_gtro_date_group', true);
+		$selected_group = get_post_meta($product->get_id(), '_gtro_date_group', true);
 		if (!empty($selected_group)) {
 			$dates = rwmb_meta('dates_' . sanitize_title($selected_group), array('object_type' => 'setting'), 'gtro_options');
-			
+
 			echo '<div class="gtro-date-selection">';
 			echo '<h3>' . __('Choisir une date', 'gtro-product-manager') . '</h3>';
 			echo '<select name="gtro_date">';
 			echo '<option value="">' . __('Je choisirais plus tard', 'gtro-product-manager') . '</option>';
 
 			if (!empty($dates)) {
-				// Créer un tableau pour stocker les dates valides
+				// Filtrer et trier les dates
 				$valid_dates = array();
-				$today = current_time('Y-m-d'); // Obtenir la date actuelle
+				$today = date('Y-m-d'); // Date du jour
 
-				// Filtrer et formater les dates
 				foreach ($dates as $date) {
 					if (isset($date['date']) && $date['date'] >= $today) {
 						$valid_dates[] = $date;
@@ -492,7 +491,7 @@ class GTRO_WooCommerce {
 					$promo_text = isset($date['promo']) && $date['promo'] > 0 
 						? ' (Promo: ' . $date['promo'] . '%)'
 						: '';
-					
+
 					echo '<option value="' . esc_attr($date['date']) . '">'
 						. esc_html($formatted_date . $promo_text)
 						. '</option>';
@@ -501,6 +500,7 @@ class GTRO_WooCommerce {
 			echo '</select>';
 			echo '</div>';
 		}
+
 
 		// 4. SECTION OPTIONS SUPPLÉMENTAIRES
 		$available_options = rwmb_meta( 'options_supplementaires', array( 'object_type' => 'setting' ), 'gtro_options' );
