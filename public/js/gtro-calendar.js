@@ -6,6 +6,9 @@ jQuery(document).ready(function ($) {
             console.log("Click détecté sur le bouton");
             console.log("Année:", year);
 
+            // Ajouter un indicateur de chargement
+            $(".calendar-content").addClass("loading");
+
             $.ajax({
                 url: gtroAjax.ajaxurl,
                 type: "POST",
@@ -17,13 +20,33 @@ jQuery(document).ready(function ($) {
                 success: function (response) {
                     console.log("Réponse reçue:", response);
                     if (response.success) {
-                        $(".custom-calendar-year").replaceWith(response.data);
-                        initCalendar(); // Réinitialiser les événements
-                        initTooltipsAndHovers(); // Réinitialiser les tooltips après le chargement
+                        // Extraire uniquement la partie calendar-content du HTML reçu
+                        var newContent = $(response.data)
+                            .find(".custom-calendar-year")
+                            .html();
+
+                        // Mettre à jour uniquement le contenu du calendrier
+                        $(".custom-calendar-year").html(newContent);
+
+                        // Mettre à jour l'année dans la navigation
+                        $(".calendar-navigation h2").text(year);
+                        $(".prev-year")
+                            .data("year", year - 1)
+                            .text("← " + (year - 1));
+                        $(".next-year")
+                            .data("year", year + 1)
+                            .text(year + 1 + " →");
+
+                        // Réinitialiser les interactions
+                        initTooltipsAndHovers();
                     }
                 },
                 error: function (xhr, status, error) {
                     console.error("Erreur AJAX:", error);
+                },
+                complete: function () {
+                    // Retirer l'indicateur de chargement
+                    $(".calendar-content").removeClass("loading");
                 },
             });
         });

@@ -197,7 +197,7 @@ class GTRO_Calendar {
 	 */
 	public function ajax_load_calendar() {
 		$year = isset($_POST['year']) ? intval($_POST['year']) : gmdate('Y');
-		// error_log('Année demandée: ' . $year);
+		//error_log('Année demandée: ' . $year);
 		
 		$dates = $this->get_all_dates('all', $year);
 		$calendar = $this->generate_calendar($dates, $year);
@@ -265,10 +265,12 @@ class GTRO_Calendar {
 	 * @param  array $dates Tableau contenant les événements, avec les clés 'date', 'group', 'color' et 'name'.
 	 * @return string Le code HTML du calendrier annuel.
 	 */
-	private function generate_calendar($dates, $year) {  // Ajout du paramètre $year
+	private function generate_calendar($dates, $year) {
+		$html = '<div class="calendar-container">';  // Conteneur principal
 
-		// Ajouter la navigation avec l'année passée en paramètre
-		$html = '<div class="calendar-navigation-wrap">';
+		// 1. Section navigation et légende (statique)
+		$html .= '<div class="calendar-header">';
+		// Navigation
 		$html .= '<div class="calendar-navigation">';
 		$html .= sprintf(
 			'<button class="prev-year" data-year="%d">← %d</button>',
@@ -282,16 +284,15 @@ class GTRO_Calendar {
 			($year+1)
 		);
 		$html .= '</div>';
-		// Légende des groupes
+
+		// Légende
 		$html .= '<div class="calendar-legend">';
-		foreach ( $this->date_groups as $group_key => $group_info ) {
-			// Légende normale
+		foreach ($this->date_groups as $group_key => $group_info) {
 			$html .= sprintf(
 				'<div class="legend-item"><span class="color-dot" style="background-color: %s"></span> %s</div>',
 				$group_info['color'],
 				$group_info['name']
 			);
-			// Légende promo
 			$html .= sprintf(
 				'<div class="legend-item"><span class="color-dot" style="background-color: %s"></span> %s (Promo)</div>',
 				'#FFD700',
@@ -299,15 +300,17 @@ class GTRO_Calendar {
 			);
 		}
 		$html .= '</div>';
-		$html .= '</div>';
-		// Message si aucun événement disponible
+		$html .= '</div>'; // Fin calendar-header
+
+		// 2. Section calendrier (partie qui sera mise à jour par AJAX)
+		$html .= '<div class="calendar-content">';
 		if (empty($dates)) {
 			$html .= '<div class="no-dates-message">Aucune date disponible pour l\'année ' . $year . '</div>';
 		}
 
 		$html .= '<div class="custom-calendar-year">';
-		// Générer un calendrier pour chaque mois
-		for ( $month = 1; $month <= 12; $month++ ) {
+		// Génération des mois
+		for ($month = 1; $month <= 12; $month++) {
 			$first_day         = mktime( 0, 0, 0, $month, 1, $year );
 			$number_days       = gmdate( 't', $first_day );
 			$first_day_of_week = gmdate( 'w', $first_day );
@@ -355,7 +358,10 @@ class GTRO_Calendar {
 			$html .= '</div></div>'; // Fin du mois
 		}
 
-		//$html .= '</div>'; // Fin du calendrier annuel
+		$html .= '</div>'; // Fin custom-calendar-year
+		$html .= '</div>'; // Fin calendar-content
+		$html .= '</div>'; // Fin calendar-container
+		
 		return $html;
 	}
 }
