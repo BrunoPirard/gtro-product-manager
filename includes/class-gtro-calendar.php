@@ -33,6 +33,8 @@ class GTRO_Calendar {
 	 */
 	private $version;
 
+	private $date_groups = array();
+
 	/**
 	 * Initialize the GTRO_Calendar class and set its properties.
 	 *
@@ -194,9 +196,12 @@ class GTRO_Calendar {
 	 * @since 1.0.0
 	 */
 	public function ajax_load_calendar() {
-		$year = isset($_GET['year']) ? intval($_GET['year']) : gmdate('Y');
+		$year = isset($_POST['year']) ? intval($_POST['year']) : gmdate('Y');
+		error_log('Année demandée: ' . $year);
+		
 		$dates = $this->get_all_dates('all', $year);
 		$calendar = $this->generate_calendar($dates, $year);
+		
 		wp_send_json_success($calendar);
 		wp_die();
 	}
@@ -263,6 +268,9 @@ class GTRO_Calendar {
 	private function generate_calendar( $dates ) {
 		$year = gmdate( 'Y' );
 		$html = '<div class="custom-calendar-year">';
+		 if (empty($dates)) {
+			$html .= '<div class="no-dates-message">Aucune date disponible pour l\'année ' . $year . '</div>';
+		}
 
 		// Ajouter la navigation
 		$html .= '<div class="calendar-navigation">';

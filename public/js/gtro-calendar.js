@@ -1,8 +1,10 @@
 jQuery(document).ready(function ($) {
     function initCalendar() {
         $(".calendar-navigation button").on("click", function (e) {
-            e.preventDefault(); // Empêcher le rechargement de la page
+            e.preventDefault();
             var year = $(this).data("year");
+            console.log("Click détecté sur le bouton");
+            console.log("Année:", year);
 
             $.ajax({
                 url: gtroAjax.ajaxurl,
@@ -10,14 +12,21 @@ jQuery(document).ready(function ($) {
                 data: {
                     action: "load_calendar",
                     year: year,
+                    nonce: gtroAjax.nonce,
                 },
                 success: function (response) {
-                    $(".custom-calendar-year").html(response);
-                    initTooltipsAndHovers(); // Réinitialiser les tooltips après le chargement
+                    console.log("Réponse reçue:", response);
+                    if (response.success) {
+                        $(".custom-calendar-year").replaceWith(response.data);
+                        initCalendar(); // Réinitialiser les événements
+                        initTooltipsAndHovers(); // Réinitialiser les tooltips après le chargement
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Erreur AJAX:", error);
                 },
             });
         });
-
         initTooltipsAndHovers();
     }
 
