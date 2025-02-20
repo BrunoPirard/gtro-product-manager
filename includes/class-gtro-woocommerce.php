@@ -460,22 +460,42 @@ class GTRO_WooCommerce {
 		}
 
 		// 3. SECTION SÉLECTION DE DATE
-		$selected_group = get_post_meta( $product->get_id(), '_gtro_date_group', true );
-		if ( ! empty( $selected_group ) ) {
-			$dates = rwmb_meta( 'dates_' . sanitize_title( $selected_group ), array( 'object_type' => 'setting' ), 'gtro_options' );
-
+		$selected_group = get_post_meta($product_id, '_gtro_date_group', true);
+		if (!empty($selected_group)) {
+			$dates = rwmb_meta('dates_' . sanitize_title($selected_group), array('object_type' => 'setting'), 'gtro_options');
+			
 			echo '<div class="gtro-date-selection">';
-			echo '<h3>' . __( 'Choisir une date', 'gtro-product-manager' ) . '</h3>';
+			echo '<h3>' . __('Choisir une date', 'gtro-product-manager') . '</h3>';
 			echo '<select name="gtro_date">';
-			echo '<option value="">' . __( 'Je choisirais plus tard', 'gtro-product-manager' ) . '</option>';
+			echo '<option value="">' . __('Je choisirais plus tard', 'gtro-product-manager') . '</option>';
 
-			if ( ! empty( $dates ) ) {
-				foreach ( $dates as $date ) {
-					if ( isset( $date['date'] ) ) {
-						echo '<option value="' . esc_attr( $date['date'] ) . '">'
-							. esc_html( $date['date'] )
-							. '</option>';
+			if (!empty($dates)) {
+				// Créer un tableau pour stocker les dates valides
+				$valid_dates = array();
+				$today = current_time('Y-m-d'); // Obtenir la date actuelle
+
+				// Filtrer et formater les dates
+				foreach ($dates as $date) {
+					if (isset($date['date']) && $date['date'] >= $today) {
+						$valid_dates[] = $date;
 					}
+				}
+
+				// Trier les dates
+				usort($valid_dates, function($a, $b) {
+					return strcmp($a['date'], $b['date']);
+				});
+
+				// Afficher les dates triées
+				foreach ($valid_dates as $date) {
+					$formatted_date = date_i18n(get_option('date_format'), strtotime($date['date']));
+					$promo_text = isset($date['promo']) && $date['promo'] > 0 
+						? ' (Promo: ' . $date['promo'] . '%)'
+						: '';
+					
+					echo '<option value="' . esc_attr($date['date']) . '">'
+						. esc_html($formatted_date . $promo_text)
+						. '</option>';
 				}
 			}
 			echo '</select>';
@@ -1228,7 +1248,7 @@ class GTRO_WooCommerce {
 					sanitize_title($combo['nom_promo_combo']) === $selected_combo && 
 					isset($combo['remise'])) {
 					$combo_discount = floatval($combo['remise']);
-					error_log('Found combo discount: ' . $combo_discount);
+					// error_log('Found combo discount: ' . $combo_discount);
 					break;
 				}
 			}
