@@ -197,7 +197,7 @@ class GTRO_Calendar {
 	 */
 	public function ajax_load_calendar() {
 		$year = isset($_POST['year']) ? intval($_POST['year']) : gmdate('Y');
-		error_log('Année demandée: ' . $year);
+		// error_log('Année demandée: ' . $year);
 		
 		$dates = $this->get_all_dates('all', $year);
 		$calendar = $this->generate_calendar($dates, $year);

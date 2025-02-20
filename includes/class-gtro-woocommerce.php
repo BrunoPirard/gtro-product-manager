@@ -1218,8 +1218,8 @@ class GTRO_WooCommerce {
 		$combos_list = rwmb_meta('combos_voitures', array('object_type' => 'setting'), 'gtro_options');
 
 		// Debug
-		error_log('Selected combo: ' . $selected_combo);
-		error_log('Combos list: ' . print_r($combos_list, true));
+		// error_log('Selected combo: ' . $selected_combo);
+		// error_log('Combos list: ' . print_r($combos_list, true));
 
 		// Vérifier si le combo existe et récupérer sa remise
 		if (!empty($combos_list) && !empty($selected_combo)) {
