@@ -265,20 +265,23 @@ class GTRO_Calendar {
 	 * @param  array $dates Tableau contenant les événements, avec les clés 'date', 'group', 'color' et 'name'.
 	 * @return string Le code HTML du calendrier annuel.
 	 */
-	private function generate_calendar( $dates ) {
-		$year = gmdate( 'Y' );
-		$html = '<div class="custom-calendar-year">';
-		 if (empty($dates)) {
-			$html .= '<div class="no-dates-message">Aucune date disponible pour l\'année ' . $year . '</div>';
-		}
+	private function generate_calendar($dates, $year) {  // Ajout du paramètre $year
 
-		// Ajouter la navigation
+		// Ajouter la navigation avec l'année passée en paramètre
+		$html = '<div class="calendar-navigation-wrap">';
 		$html .= '<div class="calendar-navigation">';
-		$html .= '<button class="prev-year" data-year="'.($year-1).'">← '.($year-1).'</button>';
-		$html .= '<h2>'.$year.'</h2>';
-		$html .= '<button class="next-year" data-year="'.($year+1).'">'.($year+1).' →</button>';
+		$html .= sprintf(
+			'<button class="prev-year" data-year="%d">← %d</button>',
+			($year-1),
+			($year-1)
+		);
+		$html .= sprintf('<h2>%d</h2>', $year);
+		$html .= sprintf(
+			'<button class="next-year" data-year="%d">%d →</button>',
+			($year+1),
+			($year+1)
+		);
 		$html .= '</div>';
-
 		// Légende des groupes
 		$html .= '<div class="calendar-legend">';
 		foreach ( $this->date_groups as $group_key => $group_info ) {
@@ -296,7 +299,13 @@ class GTRO_Calendar {
 			);
 		}
 		$html .= '</div>';
+		$html .= '</div>';
+		// Message si aucun événement disponible
+		if (empty($dates)) {
+			$html .= '<div class="no-dates-message">Aucune date disponible pour l\'année ' . $year . '</div>';
+		}
 
+		$html .= '<div class="custom-calendar-year">';
 		// Générer un calendrier pour chaque mois
 		for ( $month = 1; $month <= 12; $month++ ) {
 			$first_day         = mktime( 0, 0, 0, $month, 1, $year );
@@ -346,7 +355,7 @@ class GTRO_Calendar {
 			$html .= '</div></div>'; // Fin du mois
 		}
 
-		$html .= '</div>'; // Fin du calendrier annuel
+		//$html .= '</div>'; // Fin du calendrier annuel
 		return $html;
 	}
 }
