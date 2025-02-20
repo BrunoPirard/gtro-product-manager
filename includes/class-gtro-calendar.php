@@ -125,6 +125,7 @@ class GTRO_Calendar {
 		// Enregistrer le CSS
 		wp_register_style(
 			$this->plugin_name . '-calendar',
+			GTRO_Asset_Minifier::minify_css('gtro-calendar.css'),
 			GTRO_PLUGIN_URL . 'public/css/gtro-calendar.css',
 			array(),
 			$this->version
@@ -361,7 +362,7 @@ class GTRO_Calendar {
 		$html .= '</div>'; // Fin custom-calendar-year
 		$html .= '</div>'; // Fin calendar-content
 		$html .= '</div>'; // Fin calendar-container
-		
+
 		return $html;
 	}
 }
