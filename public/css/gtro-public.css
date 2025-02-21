@@ -69,15 +69,12 @@
 .price-details .promo.invisible {
 	visibility: hidden;
 	height: 28px;
-	/* Maintient l'espace */
 }
 
 .vehicles-grid {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	/* 3 colonnes */
 	gap: 20px;
-	/*margin-bottom: 30px;*/
 }
 
 .vehicle-card {
@@ -105,6 +102,8 @@
 	height: auto;
 	margin-bottom: 10px;
 	border-radius: 4px;
+	object-fit: cover;
+	aspect-ratio: 16/9;
 }
 
 .vehicle-card h4 {
@@ -125,20 +124,18 @@
 
 /* Optionnel : effet au survol */
 .remove-vehicle:hover {
-	background-color: #c82333;
+	background-color: #EA661C;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
 	.vehicles-grid {
 		grid-template-columns: repeat(2, 1fr);
-		/* 2 colonnes sur tablette */
 	}
 }
 
 @media (max-width: 480px) {
 	.vehicles-grid {
 		grid-template-columns: 1fr;
-		/* 1 colonne sur mobile */
 	}
 }
