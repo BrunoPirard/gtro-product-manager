@@ -501,7 +501,6 @@ class GTRO_WooCommerce {
 			echo '</div>';
 		}
 
-
 		// 4. SECTION OPTIONS SUPPLÉMENTAIRES
 		$available_options = rwmb_meta( 'options_supplementaires', array( 'object_type' => 'setting' ), 'gtro_options' );
 		$options_activees  = array();
