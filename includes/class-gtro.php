@@ -217,5 +217,24 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		public function get_version() {
 			return $this->version;
 		}
+
+		/**
+		 * Helper method to get promo dates
+		 * 
+		 * @param string|array|null $group_slugs Le(s) slug(s) du/des groupe(s)
+		 * @return array Liste des dates en promotion
+		 */
+		public function get_promo_dates($group_slugs = null) {
+			return $this->dates_manager->get_promo_dates($group_slugs);
+		}
+
+		/**
+		 * Get available groups
+		 * 
+		 * @return array Liste des slugs de groupes
+		 */
+		public function get_available_groups() {
+			return $this->dates_manager->get_available_groups();
+		}
 	}
 }
