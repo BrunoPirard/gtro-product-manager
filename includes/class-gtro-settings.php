@@ -404,6 +404,28 @@ class GTRO_Settings {
 					',
 				),
 				
+				// Couleurs des groupes de dates
+				array(
+					'name'   => __('Couleurs des groupes de dates', 'gtro-product-manager'),
+					'id'     => 'group_colors',
+					'type'   => 'group',
+					'clone'  => true,
+					'fields' => array(
+						array(
+							'name'    => __('Groupe de dates', 'gtro-product-manager'),
+							'id'      => 'group_name',
+							'type'    => 'select',
+							'options' => $this->get_available_groups_options(),
+						),
+						array(
+							'name'    => __('Couleur', 'gtro-product-manager'),
+							'id'      => 'color',
+							'type'    => 'color',
+							'default' => '#000000',
+						),
+					),
+				),
+				
 				// Couleur des promotions
 				array(
 					'name'    => __('Couleur des dates en promotion', 'gtro-product-manager'),
@@ -500,6 +522,25 @@ class GTRO_Settings {
 		}
 		
 		return $dates_with_promo;
+	}
+
+	/**
+	 * Récupère la liste des groupes disponibles pour les options de sélection
+	 *
+	 * @return array Liste des groupes sous forme de tableau associatif
+	 */
+	private function get_available_groups_options() {
+		$groups = get_option('gtro_groupes_dates', array());
+		$options = array('' => __('Sélectionnez un groupe', 'gtro-product-manager'));
+		
+		if (!empty($groups)) {
+			foreach ($groups as $group) {
+				$slug = sanitize_title($group);
+				$options[$slug] = $group;
+			}
+		}
+		
+		return $options;
 	}
 
 	/**

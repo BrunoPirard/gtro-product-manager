@@ -127,18 +127,38 @@ class GTRO_Calendar {
      * @return string The color associated with the date group.
      */
     private function get_group_color($slug) {
-		
 		$settings = get_option('gtro_options');
-		$promo_color = !empty($settings['promo_color']) ? $settings['promo_color'] : '#FFD700';
+		
+		// Chercher d'abord dans les couleurs personnalisées
+		if (!empty($settings['group_colors'])) {
+			foreach ($settings['group_colors'] as $group_color) {
+				if ($group_color['group_name'] === $slug && !empty($group_color['color'])) {
+					return $group_color['color'];
+				}
+			}
+		}
 
-        // Définir des couleurs par défaut ou les récupérer depuis les options
-        $colors = array(
-            'monoplace' => '#ff6b6b',
-            'gt' => '#4ecdc4',
-            // Ajouter d'autres couleurs par défaut si nécessaire
-        );
-        return isset($colors[$slug]) ? $colors[$slug] : '#' . substr(md5($slug), 0, 6);
-    }
+		// Couleurs par défaut si aucune couleur personnalisée n'est trouvée
+		$default_colors = array(
+			'monoplace' => '#ff6b6b',
+			'gt' => '#4ecdc4',
+		);
+
+		return isset($default_colors[$slug]) ? $default_colors[$slug] : '#' . substr(md5($slug), 0, 6);
+	}
+
+	// Méthode helper pour obtenir la liste des groupes disponibles
+	private function get_available_groups_options() {
+		$groups = get_option('gtro_groupes_dates', array());
+		$options = array('' => __('Sélectionnez un groupe', 'gtro-product-manager'));
+		
+		foreach ($groups as $group) {
+			$slug = sanitize_title($group);
+			$options[$slug] = $group;
+		}
+		
+		return $options;
+	}
 
 	/**
 	 * Register the styles and scripts for the calendar.
@@ -251,6 +271,10 @@ class GTRO_Calendar {
 	private function get_all_dates($groups = 'all', $year = null) {
 		$all_dates = array();
 		$year = $year ?: gmdate('Y');
+		
+		// Récupérer les options, y compris la couleur de promotion
+		$settings = get_option('gtro_options');
+		$promo_color = !empty($settings['promo_color']) ? $settings['promo_color'] : '#FFD700'; // Couleur par défaut si non définie
 
 		foreach ($this->date_groups as $group_key => $group_info) {
 			if ($groups === 'all' || $groups === $group_key) {
@@ -260,11 +284,11 @@ class GTRO_Calendar {
 					foreach ($dates_group[$group_info['meta_key']] as $entry) {
 						if (!empty($entry['date'])) {
 							$date_year = date('Y', strtotime($entry['date']));
-							if ($date_year == $year) { // Filtrer par année
-								// Déterminer la couleur en fonction de la promo
+							if ($date_year == $year) {
+								// Utiliser la couleur de promotion depuis les paramètres
 								$color = isset($entry['promo']) && $entry['promo'] > 0 
-									? '#FFD700'  // Couleur promo
-									: $group_info['color'];  // Couleur normale
+									? $promo_color  // Utiliser la couleur de promotion personnalisée
+									: $group_info['color'];  // Couleur normale du groupe
 
 								// Créer le nom de l'événement
 								$event_name = $group_info['name'];
@@ -272,7 +296,6 @@ class GTRO_Calendar {
 									$event_name .= ' (Promo: ' . $entry['promo'] . '%)';
 								}
 
-								// Ajouter la date au tableau
 								$all_dates[] = array(
 									'date' => $entry['date'],
 									'group' => $group_key,
@@ -295,7 +318,7 @@ class GTRO_Calendar {
 	 * @return string Le code HTML du calendrier annuel.
 	 */
 	private function generate_calendar($dates, $year) {
-		$html = '<div class="calendar-container">';  // Conteneur principal
+		$html = '<div class="calendar-content">';  // Conteneur principal
 
 		// 1. Section navigation et légende (statique)
 		$html .= '<div class="calendar-header">';
@@ -316,6 +339,9 @@ class GTRO_Calendar {
 
 		// Légende
 		$html .= '<div class="calendar-legend">';
+		$settings = get_option('gtro_options');
+		$promo_color = !empty($settings['promo_color']) ? $settings['promo_color'] : '#FFD700';
+
 		foreach ($this->date_groups as $group_key => $group_info) {
 			$html .= sprintf(
 				'<div class="legend-item"><span class="color-dot" style="background-color: %s"></span> %s</div>',
@@ -324,15 +350,14 @@ class GTRO_Calendar {
 			);
 			$html .= sprintf(
 				'<div class="legend-item"><span class="color-dot" style="background-color: %s"></span> %s (Promo)</div>',
-				'#FFD700',
+				$promo_color, // Utiliser la couleur de promotion personnalisée
 				$group_info['name']
 			);
 		}
-		$html .= '</div>';
-		$html .= '</div>'; // Fin calendar-header
+		$html .= '</div></div>';
 
 		// 2. Section calendrier (partie qui sera mise à jour par AJAX)
-		$html .= '<div class="calendar-content">';
+		$html .= '<div class="calendar-container">';
 		if (empty($dates)) {
 			$html .= '<div class="no-dates-message">Aucune date disponible pour l\'année ' . $year . '</div>';
 		}
@@ -388,7 +413,6 @@ class GTRO_Calendar {
 		}
 
 		$html .= '</div>'; // Fin custom-calendar-year
-		$html .= '</div>'; // Fin calendar-content
 		$html .= '</div>'; // Fin calendar-container
 
 		return $html;
