@@ -9,13 +9,14 @@ msgstr ""
 "Project-Id-Version: Package Name\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-02-22 14:46+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2025-02-22 14:48+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.5\n"
 
 #: admin/class-gtro-admin.php:96
 msgid "Settings"
@@ -179,8 +180,7 @@ msgstr ""
 msgid "Options GTRO"
 msgstr ""
 
-#: includes/class-gtro-settings.php:327
-#: includes/class-gtro-woocommerce.php:521
+#: includes/class-gtro-settings.php:327 includes/class-gtro-woocommerce.php:521
 msgid "Options supplémentaires"
 msgstr ""
 
@@ -240,8 +240,7 @@ msgstr ""
 msgid "Couleurs des groupes de dates"
 msgstr ""
 
-#: includes/class-gtro-settings.php:415
-#: includes/class-gtro-woocommerce.php:133
+#: includes/class-gtro-settings.php:415 includes/class-gtro-woocommerce.php:133
 msgid "Groupe de dates"
 msgstr ""
 
@@ -269,8 +268,7 @@ msgstr ""
 msgid "Sélectionnez une catégorie"
 msgstr ""
 
-#: includes/class-gtro-settings.php:485
-#: includes/class-gtro-woocommerce.php:310
+#: includes/class-gtro-settings.php:485 includes/class-gtro-woocommerce.php:310
 msgid "Sélectionner un combo"
 msgstr ""
 
@@ -330,8 +328,7 @@ msgid "Formule"
 msgstr ""
 
 #: includes/class-gtro-woocommerce.php:170
-msgid ""
-"Sélectionnez une formule (uniquement si le nombre maximum de tours est 0)"
+msgid "Sélectionnez une formule (uniquement si le nombre maximum de tours est 0)"
 msgstr ""
 
 #: includes/class-gtro-woocommerce.php:177
