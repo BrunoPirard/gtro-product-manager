@@ -2,79 +2,73 @@
 namespace GTRO_Plugin;
 
 class GTRO_Settings {
+	
+    private $meta_boxes = array();
 
+    /**
+     * Enregistre les champs de réglage pour la page de paramètres.
+     *
+     * Les champs sont enregistrés en utilisant le hook "rwmb_meta_boxes"
+     * et la page de paramètres est enregistrée en utilisant le hook
+     * "mb_settings_pages". On ajoute également un hook pour gérer le
+     * cas où un utilisateur ajoute un nouveau groupe de dates.
+     *
+     * @since 1.0.0
+     */
+    public function __construct() {
+        // S'assurer que le hook n'est ajouté qu'une seule fois
+        add_filter('rwmb_meta_boxes', array($this, 'register_settings_fields'), 10, 1);
+        add_filter('mb_settings_pages', array($this, 'register_settings_pages'), 10, 1);
+        add_action('rwmb_after_save_post', array($this, 'handle_new_group'), 10, 2);
 
-	private $meta_boxes = array();
+        // Ajouter un filtre pour mettre à jour dynamiquement les options des selects
+        add_filter('rwmb_select_options', array($this, 'update_category_options'), 10, 2);
 
-	/**
-	 * Enregistre les champs de réglage pour la page de paramètres.
-	 *
-	 * Les champs sont enregistrés en utilisant le hook "rwmb_meta_boxes"
-	 * et la page de paramètres est enregistrée en utilisant le hook
-	 * "mb_settings_pages". On ajoute également un hook pour gérer le
-	 * cas où un utilisateur ajoute un nouveau groupe de dates.
-	 *
-	 * @since 1.0.0
-	 */
-	public function __construct() {
-		// S'assurer que le hook n'est ajouté qu'une seule fois
-		add_filter( 'rwmb_meta_boxes', array( $this, 'register_settings_fields' ), 10, 1 );
-		add_filter( 'mb_settings_pages', array( $this, 'register_settings_pages' ), 10, 1 );
-		add_action( 'rwmb_after_save_post', array( $this, 'handle_new_group' ), 10, 2 );
+        //add_action('init', 'gtro_register_bricks_functions');
+    }
 
-		// Ajouter un filtre pour mettre à jour dynamiquement les options des selects
-    	add_filter('rwmb_select_options', array($this, 'update_category_options'), 10, 2);
+    /**
+     * Updates the options for category and combo select fields.
+     *
+     * @param array $options The original options for the select field.
+     * @param array $field   The field data containing the field ID.
+     * @return array Updated options if the field is category or combo related, otherwise
+     *               the original options.
+     */
+    public function update_category_options($options, $field) {
+        // Vérifier si c'est un champ de catégorie
+        if ($field['id'] === 'categorie') {
+            return $this->get_categories_options();
+        }
 
-		//add_action('init', 'gtro_register_bricks_functions');
-	}
+        // Vérifier si c'est un champ de combo
+        if ($field['id'] === 'nom_promo_combo') {
+            return $this->get_combos_options();
+        }
 
-	/**
-	 * Updates the options for category and combo select fields.
-	 *
-	 * @param array $options The original options for the select field.
-	 * @param array $field   The field data containing the field ID.
-	 * @return array Updated options if the field is category or combo related, otherwise
-	 *               the original options.
-	 */
-	public function update_category_options($options, $field) {
-		// Vérifier si c'est un champ de catégorie
-		if ($field['id'] === 'categorie') {
-			return $this->get_categories_options();
-		}
-		
-		// Vérifier si c'est un champ de combo
-		if ($field['id'] === 'nom_promo_combo') {
-			return $this->get_combos_options();
-		}
-		
-		return $options;
-	}
+        return $options;
+    }
 
-	/**
-	 * Handle the creation of a new date group after saving post data.
-	 *
-	 * This function checks if a new date group has been submitted via the
-	 * 'nouveau_groupe' POST field. If so, it sanitizes the input and adds
-	 * it to the existing date groups option if it doesn't already exist.
-	 *
-	 * @param int          $post_id The ID of the saved post.
-	 * @param WP_Post|null $post    The post object (optional).
-	 *
-	 * @since 1.0.0
-	 */
-	public function handle_new_group( $post_id, $post = null ) {
-		if ( ! isset( $_POST['nouveau_groupe'] ) || empty( $_POST['nouveau_groupe'] ) ) {
-			return;
-		}
+    /**
+     * Handle the creation of a new date group after saving post data.
+     *
+     * @param int          $post_id The ID of the saved post.
+     * @param WP_Post|null $post    The post object (optional).
+     * @since 1.0.0
+     */
+    public function handle_new_group($post_id, $post = null) {
+        if (!isset($_POST['nouveau_groupe']) || empty($_POST['nouveau_groupe'])) {
+            return;
+        }
 
-		$nouveau_groupe    = sanitize_text_field( $_POST['nouveau_groupe'] );
-		$groupes_existants = get_option( 'gtro_groupes_dates', array() );
+        $nouveau_groupe = sanitize_text_field($_POST['nouveau_groupe']);
+        $groupes_existants = get_option('gtro_groupes_dates', array());
 
-		if ( ! in_array( $nouveau_groupe, $groupes_existants ) ) {
-			$groupes_existants[] = $nouveau_groupe;
-			update_option( 'gtro_groupes_dates', $groupes_existants );
-		}
-	}
+        if (!in_array($nouveau_groupe, $groupes_existants)) {
+            $groupes_existants[] = $nouveau_groupe;
+            update_option('gtro_groupes_dates', $groupes_existants);
+        }
+    }
 
 	/**
 	 * Register the settings page for GTRO.
@@ -105,10 +99,11 @@ class GTRO_Settings {
 						'label' => __('Catégories et Combos', 'gtro-product-manager'),
 						'icon'  => 'dashicons-category',
 					),
-				),
-				'personnalisation' => array(
-					'label' => __('Personnalisation', 'gtro-product-manager'),
-					'icon'  => 'dashicons-admin-customizer',
+					// Ajout de l'onglet personnalisation dans le tableau 'tabs'
+					'personnalisation' => array(
+						'label' => __('Personnalisation', 'gtro-product-manager'),
+						'icon'  => 'dashicons-admin-customizer',
+					),
 				),
 			);
 		}
