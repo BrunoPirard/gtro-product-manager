@@ -3,8 +3,8 @@ jQuery(document).ready(function ($) {
         $(".calendar-navigation button").on("click", function (e) {
             e.preventDefault();
             var year = $(this).data("year");
-            console.log("Click détecté sur le bouton");
-            console.log("Année:", year);
+            //console.log("Click détecté sur le bouton");
+            //console.log("Année:", year);
 
             // Ajouter un indicateur de chargement
             $(".calendar-content").addClass("loading");
@@ -18,7 +18,7 @@ jQuery(document).ready(function ($) {
                     nonce: gtroAjax.nonce,
                 },
                 success: function (response) {
-                    console.log("Réponse reçue:", response);
+                    //console.log("Réponse reçue:", response);
                     if (response.success) {
                         // Extraire uniquement la partie calendar-content du HTML reçu
                         var newContent = $(response.data)
