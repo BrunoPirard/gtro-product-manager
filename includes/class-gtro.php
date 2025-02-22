@@ -53,13 +53,13 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 */
 		public function __construct() {
 			// Éviter l'initialisation multiple
-			if (self::$instance !== null) {
+			if ( self::$instance !== null ) {
 				return self::$instance;
 			}
 
 			self::$instance = $this;
 
-			if (defined('GTRO_VERSION')) {
+			if ( defined( 'GTRO_VERSION' ) ) {
 				$this->version = GTRO_VERSION;
 			} else {
 				$this->version = '1.0.0';
@@ -89,8 +89,8 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-calendar.php';
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-dates-manager.php';
 
-			$this->loader   = new GTRO_Loader();
-			$this->settings = new GTRO_Settings(); 
+			$this->loader        = new GTRO_Loader();
+			$this->settings      = new GTRO_Settings();
 			$this->dates_manager = new GTRO_Dates_Manager();
 		}
 
@@ -100,7 +100,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @return GTRO_Main
 		 */
 		public static function get_instance() {
-			if (self::$instance === null) {
+			if ( self::$instance === null ) {
 				self::$instance = new self();
 			}
 			return self::$instance;
@@ -125,18 +125,18 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @access private
 		 */
 		private function define_admin_hooks() {
-			$plugin_admin = new GTRO_Admin($this->get_plugin_name(), $this->get_version());
+			$plugin_admin = new GTRO_Admin( $this->get_plugin_name(), $this->get_version() );
 
-			$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_styles');
-			$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
+			$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
+			$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
 			// Désactiver les produits variables
-			$this->loader->add_filter('product_type_selector', $this, 'remove_variable_product_type');
-			$this->loader->add_action('admin_head', $this, 'hide_variable_product_options');
-			$this->loader->add_filter('woocommerce_ajax_variation_threshold', $this, 'disable_variations');
+			$this->loader->add_filter( 'product_type_selector', $this, 'remove_variable_product_type' );
+			$this->loader->add_action( 'admin_head', $this, 'hide_variable_product_options' );
+			$this->loader->add_filter( 'woocommerce_ajax_variation_threshold', $this, 'disable_variations' );
 
 			// Initialiser l'intégration WooCommerce si WooCommerce est actif
-			if (class_exists('WooCommerce')) {
+			if ( class_exists( 'WooCommerce' ) ) {
 				new GTRO_WooCommerce();
 			}
 		}
@@ -147,8 +147,8 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @param array $types Product types
 		 * @return array Modified product types
 		 */
-		public function remove_variable_product_type($types) {
-			unset($types['variable']);
+		public function remove_variable_product_type( $types ) {
+			unset( $types['variable'] );
 			return $types;
 		}
 
@@ -220,17 +220,17 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 
 		/**
 		 * Helper method to get promo dates
-		 * 
+		 *
 		 * @param string|array|null $group_slugs Le(s) slug(s) du/des groupe(s)
 		 * @return array Liste des dates en promotion
 		 */
-		public function get_promo_dates($group_slugs = null) {
-			return $this->dates_manager->get_promo_dates($group_slugs);
+		public function get_promo_dates( $group_slugs = null ) {
+			return $this->dates_manager->get_promo_dates( $group_slugs );
 		}
 
 		/**
 		 * Get available groups
-		 * 
+		 *
 		 * @return array Liste des slugs de groupes
 		 */
 		public function get_available_groups() {
@@ -246,13 +246,13 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 			// Initialiser les options par défaut si nécessaire
 			$default_options = array(
 				'promo_color' => '#FFD700',
-				'delete_data' => false
+				'delete_data' => false,
 			);
-			
-			$current_options = get_option('gtro_options', array());
-			$merged_options = wp_parse_args($current_options, $default_options);
-			
-			update_option('gtro_options', $merged_options);
+
+			$current_options = get_option( 'gtro_options', array() );
+			$merged_options  = wp_parse_args( $current_options, $default_options );
+
+			update_option( 'gtro_options', $merged_options );
 		}
 	}
 }

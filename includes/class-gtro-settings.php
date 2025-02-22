@@ -2,73 +2,73 @@
 namespace GTRO_Plugin;
 
 class GTRO_Settings {
-	
-    private $meta_boxes = array();
 
-    /**
-     * Enregistre les champs de réglage pour la page de paramètres.
-     *
-     * Les champs sont enregistrés en utilisant le hook "rwmb_meta_boxes"
-     * et la page de paramètres est enregistrée en utilisant le hook
-     * "mb_settings_pages". On ajoute également un hook pour gérer le
-     * cas où un utilisateur ajoute un nouveau groupe de dates.
-     *
-     * @since 1.0.0
-     */
-    public function __construct() {
-        // S'assurer que le hook n'est ajouté qu'une seule fois
-        add_filter('rwmb_meta_boxes', array($this, 'register_settings_fields'), 10, 1);
-        add_filter('mb_settings_pages', array($this, 'register_settings_pages'), 10, 1);
-        add_action('rwmb_after_save_post', array($this, 'handle_new_group'), 10, 2);
+	private $meta_boxes = array();
 
-        // Ajouter un filtre pour mettre à jour dynamiquement les options des selects
-        add_filter('rwmb_select_options', array($this, 'update_category_options'), 10, 2);
+	/**
+	 * Enregistre les champs de réglage pour la page de paramètres.
+	 *
+	 * Les champs sont enregistrés en utilisant le hook "rwmb_meta_boxes"
+	 * et la page de paramètres est enregistrée en utilisant le hook
+	 * "mb_settings_pages". On ajoute également un hook pour gérer le
+	 * cas où un utilisateur ajoute un nouveau groupe de dates.
+	 *
+	 * @since 1.0.0
+	 */
+	public function __construct() {
+		// S'assurer que le hook n'est ajouté qu'une seule fois
+		add_filter( 'rwmb_meta_boxes', array( $this, 'register_settings_fields' ), 10, 1 );
+		add_filter( 'mb_settings_pages', array( $this, 'register_settings_pages' ), 10, 1 );
+		add_action( 'rwmb_after_save_post', array( $this, 'handle_new_group' ), 10, 2 );
 
-        //add_action('init', 'gtro_register_bricks_functions');
-    }
+		// Ajouter un filtre pour mettre à jour dynamiquement les options des selects
+		add_filter( 'rwmb_select_options', array( $this, 'update_category_options' ), 10, 2 );
 
-    /**
-     * Updates the options for category and combo select fields.
-     *
-     * @param array $options The original options for the select field.
-     * @param array $field   The field data containing the field ID.
-     * @return array Updated options if the field is category or combo related, otherwise
-     *               the original options.
-     */
-    public function update_category_options($options, $field) {
-        // Vérifier si c'est un champ de catégorie
-        if ($field['id'] === 'categorie') {
-            return $this->get_categories_options();
-        }
+		// add_action('init', 'gtro_register_bricks_functions');
+	}
 
-        // Vérifier si c'est un champ de combo
-        if ($field['id'] === 'nom_promo_combo') {
-            return $this->get_combos_options();
-        }
+	/**
+	 * Updates the options for category and combo select fields.
+	 *
+	 * @param array $options The original options for the select field.
+	 * @param array $field   The field data containing the field ID.
+	 * @return array Updated options if the field is category or combo related, otherwise
+	 *               the original options.
+	 */
+	public function update_category_options( $options, $field ) {
+		// Vérifier si c'est un champ de catégorie
+		if ( $field['id'] === 'categorie' ) {
+			return $this->get_categories_options();
+		}
 
-        return $options;
-    }
+		// Vérifier si c'est un champ de combo
+		if ( $field['id'] === 'nom_promo_combo' ) {
+			return $this->get_combos_options();
+		}
 
-    /**
-     * Handle the creation of a new date group after saving post data.
-     *
-     * @param int          $post_id The ID of the saved post.
-     * @param WP_Post|null $post    The post object (optional).
-     * @since 1.0.0
-     */
-    public function handle_new_group($post_id, $post = null) {
-        if (!isset($_POST['nouveau_groupe']) || empty($_POST['nouveau_groupe'])) {
-            return;
-        }
+		return $options;
+	}
 
-        $nouveau_groupe = sanitize_text_field($_POST['nouveau_groupe']);
-        $groupes_existants = get_option('gtro_groupes_dates', array());
+	/**
+	 * Handle the creation of a new date group after saving post data.
+	 *
+	 * @param int          $post_id The ID of the saved post.
+	 * @param WP_Post|null $post    The post object (optional).
+	 * @since 1.0.0
+	 */
+	public function handle_new_group( $post_id, $post = null ) {
+		if ( ! isset( $_POST['nouveau_groupe'] ) || empty( $_POST['nouveau_groupe'] ) ) {
+			return;
+		}
 
-        if (!in_array($nouveau_groupe, $groupes_existants)) {
-            $groupes_existants[] = $nouveau_groupe;
-            update_option('gtro_groupes_dates', $groupes_existants);
-        }
-    }
+		$nouveau_groupe    = sanitize_text_field( $_POST['nouveau_groupe'] );
+		$groupes_existants = get_option( 'gtro_groupes_dates', array() );
+
+		if ( ! in_array( $nouveau_groupe, $groupes_existants ) ) {
+			$groupes_existants[] = $nouveau_groupe;
+			update_option( 'gtro_groupes_dates', $groupes_existants );
+		}
+	}
 
 	/**
 	 * Register the settings page for GTRO.
@@ -83,25 +83,25 @@ class GTRO_Settings {
 	 *
 	 * @since 1.0.0
 	 */
-	public function register_settings_pages($settings_pages) {
-		if (!isset($settings_pages['gtro'])) {
+	public function register_settings_pages( $settings_pages ) {
+		if ( ! isset( $settings_pages['gtro'] ) ) {
 			$settings_pages['gtro'] = array(
 				'id'          => 'gtro',
-				'menu_title'  => __('Réglages GTRO', 'gtro-product-manager'),
+				'menu_title'  => __( 'Réglages GTRO', 'gtro-product-manager' ),
 				'option_name' => 'gtro_options',
 				'tabs'        => array(
-					'voitures'   => __('Voitures', 'gtro-product-manager'),
-					'prix'       => __('Prix', 'gtro-product-manager'),
-					'formules'   => __('Formules', 'gtro-product-manager'),
-					'dates'      => __('Dates', 'gtro-product-manager'),
-					'options'    => __('Options', 'gtro-product-manager'),
-					'categories' => array(
-						'label' => __('Catégories et combos', 'gtro-product-manager'),
+					'voitures'         => __( 'Voitures', 'gtro-product-manager' ),
+					'prix'             => __( 'Prix', 'gtro-product-manager' ),
+					'formules'         => __( 'Formules', 'gtro-product-manager' ),
+					'dates'            => __( 'Dates', 'gtro-product-manager' ),
+					'options'          => __( 'Options', 'gtro-product-manager' ),
+					'categories'       => array(
+						'label' => __( 'Catégories et combos', 'gtro-product-manager' ),
 						'icon'  => 'dashicons-category',
 					),
 					// Ajout de l'onglet personnalisation dans le tableau 'tabs'
 					'personnalisation' => array(
-						'label' => __('Personnalisation', 'gtro-product-manager'),
+						'label' => __( 'Personnalisation', 'gtro-product-manager' ),
 						'icon'  => 'dashicons-admin-customizer',
 					),
 				),
@@ -210,7 +210,7 @@ class GTRO_Settings {
 						),
 						array(
 							'name' => __( 'Remise (%)', 'gtro-product-manager' ),
-							'id'   => 'remise',  
+							'id'   => 'remise',
 							'type' => 'number',
 							'step' => '0.5',
 							'min'  => '0',
@@ -346,34 +346,34 @@ class GTRO_Settings {
 
 		// Onglet Categories
 		$meta_boxes[] = array(
-			'title'          => __('Gestion des catégories et combos', 'gtro-product-manager'),
+			'title'          => __( 'Gestion des catégories et combos', 'gtro-product-manager' ),
 			'id'             => 'categories',
-			'settings_pages' => array('gtro'),
+			'settings_pages' => array( 'gtro' ),
 			'tab'            => 'categories',
 			'fields'         => array(
 				array(
-					'name'       => __('Liste des catégories', 'gtro-product-manager'),
+					'name'       => __( 'Liste des catégories', 'gtro-product-manager' ),
 					'id'         => 'categories_list',
 					'type'       => 'group',
 					'clone'      => true,
 					'sort_clone' => true,
 					'fields'     => array(
 						array(
-							'name' => __('Nom de la catégorie', 'gtro-product-manager'),
+							'name' => __( 'Nom de la catégorie', 'gtro-product-manager' ),
 							'id'   => 'nom_categorie',
 							'type' => 'text',
 						),
 					),
 				),
 				array(
-					'name'       => __('Liste des combos', 'gtro-product-manager'),
+					'name'       => __( 'Liste des combos', 'gtro-product-manager' ),
 					'id'         => 'combos_list',
 					'type'       => 'group',
 					'clone'      => true,
 					'sort_clone' => true,
 					'fields'     => array(
 						array(
-							'name' => __('Nom du combo', 'gtro-product-manager'),
+							'name' => __( 'Nom du combo', 'gtro-product-manager' ),
 							'id'   => 'nom_combo',
 							'type' => 'text',
 						),
@@ -384,9 +384,9 @@ class GTRO_Settings {
 
 		// Onglet Personnalisation
 		$meta_boxes[] = array(
-			'title'          => __('Personnalisation GTRO', 'gtro-product-manager'),
+			'title'          => __( 'Personnalisation GTRO', 'gtro-product-manager' ),
 			'id'             => 'personnalisation',
-			'settings_pages' => array('gtro'),
+			'settings_pages' => array( 'gtro' ),
 			'tab'            => 'personnalisation',
 			'fields'         => array(
 				// Section Documentation
@@ -394,53 +394,53 @@ class GTRO_Settings {
 					'type' => 'custom_html',
 					'std'  => '
 						<div class="gtro-docs" style="background: #fff; padding: 20px; border-left: 4px solid #2271b1; margin-bottom: 20px;">
-							<h3>' . __('Documentation', 'gtro-product-manager') . '</h3>
-							<h4>' . __('Shortcodes disponibles :', 'gtro-product-manager') . '</h4>
-							<code>[display_calendar]</code> - ' . __('Affiche le calendrier des dates', 'gtro-product-manager') . '<br>
-							<h4>' . __('Fonctions disponibles :', 'gtro-product-manager') . '</h4>
-							<code>get_promo_dates($group_slugs = null)</code> - ' . __('Récupère les dates en promotion', 'gtro-product-manager') . '<br>
-							<code>get_available_groups()</code> - ' . __('Récupère la liste des groupes disponibles', 'gtro-product-manager') . '
+							<h3>' . __( 'Documentation', 'gtro-product-manager' ) . '</h3>
+							<h4>' . __( 'Shortcodes disponibles :', 'gtro-product-manager' ) . '</h4>
+							<code>[display_calendar]</code> - ' . __( 'Affiche le calendrier des dates', 'gtro-product-manager' ) . '<br>
+							<h4>' . __( 'Fonctions disponibles :', 'gtro-product-manager' ) . '</h4>
+							<code>get_promo_dates($group_slugs = null)</code> - ' . __( 'Récupère les dates en promotion', 'gtro-product-manager' ) . '<br>
+							<code>get_available_groups()</code> - ' . __( 'Récupère la liste des groupes disponibles', 'gtro-product-manager' ) . '
 						</div>
 					',
 				),
-				
+
 				// Couleurs des groupes de dates
 				array(
-					'name'   => __('Couleurs des groupes de dates', 'gtro-product-manager'),
+					'name'   => __( 'Couleurs des groupes de dates', 'gtro-product-manager' ),
 					'id'     => 'group_colors',
 					'type'   => 'group',
 					'clone'  => true,
 					'fields' => array(
 						array(
-							'name'    => __('Groupe de dates', 'gtro-product-manager'),
+							'name'    => __( 'Groupe de dates', 'gtro-product-manager' ),
 							'id'      => 'group_name',
 							'type'    => 'select',
 							'options' => $this->get_available_groups_options(),
 						),
 						array(
-							'name'    => __('Couleur', 'gtro-product-manager'),
+							'name'    => __( 'Couleur', 'gtro-product-manager' ),
 							'id'      => 'color',
 							'type'    => 'color',
 							'default' => '#000000',
 						),
 					),
 				),
-				
+
 				// Couleur des promotions
 				array(
-					'name'    => __('Couleur des dates en promotion', 'gtro-product-manager'),
+					'name'    => __( 'Couleur des dates en promotion', 'gtro-product-manager' ),
 					'id'      => 'promo_color',
 					'type'    => 'color',
 					'default' => '#FFD700',
-					'desc'    => __('Choisissez la couleur pour les dates en promotion dans le calendrier', 'gtro-product-manager'),
+					'desc'    => __( 'Choisissez la couleur pour les dates en promotion dans le calendrier', 'gtro-product-manager' ),
 				),
-				
+
 				// Suppression des données
 				array(
-					'name'    => __('Suppression des données', 'gtro-product-manager'),
-					'id'      => 'delete_data',
-					'type'    => 'checkbox',
-					'desc'    => __('Supprimer toutes les données du plugin lors de sa désinstallation', 'gtro-product-manager'),
+					'name' => __( 'Suppression des données', 'gtro-product-manager' ),
+					'id'   => 'delete_data',
+					'type' => 'checkbox',
+					'desc' => __( 'Supprimer toutes les données du plugin lors de sa désinstallation', 'gtro-product-manager' ),
 				),
 			),
 		);
@@ -459,20 +459,20 @@ class GTRO_Settings {
 	 *               respective names as values.
 	 */
 	private function get_categories_options() {
-		$options = array('' => __('Sélectionnez une catégorie', 'gtro-product-manager'));
-		
+		$options = array( '' => __( 'Sélectionnez une catégorie', 'gtro-product-manager' ) );
+
 		// Récupérer les catégories depuis les options
-		$settings = get_option('gtro_options');
-		
-		if (!empty($settings['categories_list'])) {
-			foreach ($settings['categories_list'] as $categorie) {
-				if (!empty($categorie['nom_categorie'])) {
-					$slug = sanitize_title($categorie['nom_categorie']);
-					$options[$slug] = $categorie['nom_categorie'];
+		$settings = get_option( 'gtro_options' );
+
+		if ( ! empty( $settings['categories_list'] ) ) {
+			foreach ( $settings['categories_list'] as $categorie ) {
+				if ( ! empty( $categorie['nom_categorie'] ) ) {
+					$slug             = sanitize_title( $categorie['nom_categorie'] );
+					$options[ $slug ] = $categorie['nom_categorie'];
 				}
 			}
 		}
-		
+
 		return $options;
 	}
 
@@ -482,45 +482,45 @@ class GTRO_Settings {
 	 * @return array
 	 */
 	private function get_combos_options() {
-		$options = array('' => __('Sélectionner un combo', 'gtro-product-manager'));
-		
+		$options = array( '' => __( 'Sélectionner un combo', 'gtro-product-manager' ) );
+
 		// Récupérer les combos depuis les options
-		$settings = get_option('gtro_options');
-		
-		if (!empty($settings['combos_list'])) {
-			foreach ($settings['combos_list'] as $combo) {
-				if (!empty($combo['nom_combo'])) {
-					$slug = sanitize_title($combo['nom_combo']);
-					$options[$slug] = $combo['nom_combo'];
+		$settings = get_option( 'gtro_options' );
+
+		if ( ! empty( $settings['combos_list'] ) ) {
+			foreach ( $settings['combos_list'] as $combo ) {
+				if ( ! empty( $combo['nom_combo'] ) ) {
+					$slug             = sanitize_title( $combo['nom_combo'] );
+					$options[ $slug ] = $combo['nom_combo'];
 				}
 			}
 		}
-		
+
 		return $options;
 	}
-	
+
 	/**
 	 * Récupère les dates et leurs promotions associées pour un groupe de dates
-	 * 
+	 *
 	 * @param string $groupe_name Nom du groupe de dates
 	 * @return array Tableau des dates avec leurs promotions
 	 */
-	public function gtro_get_dates_with_promo($groupe_name) {
-		$slug = sanitize_title($groupe_name);
-		$dates = rwmb_get_value('dates_' . $slug, ['object_type' => 'setting'], 'gtro');
+	public function gtro_get_dates_with_promo( $groupe_name ) {
+		$slug             = sanitize_title( $groupe_name );
+		$dates            = rwmb_get_value( 'dates_' . $slug, array( 'object_type' => 'setting' ), 'gtro' );
 		$dates_with_promo = array();
-		
-		if (!empty($dates)) {
-			foreach ($dates as $date_entry) {
-				if (isset($date_entry['promo']) && $date_entry['promo'] > 0) {
+
+		if ( ! empty( $dates ) ) {
+			foreach ( $dates as $date_entry ) {
+				if ( isset( $date_entry['promo'] ) && $date_entry['promo'] > 0 ) {
 					$dates_with_promo[] = array(
-						'date' => $date_entry['date'],
-						'promo' => $date_entry['promo']
+						'date'  => $date_entry['date'],
+						'promo' => $date_entry['promo'],
 					);
 				}
 			}
 		}
-		
+
 		return $dates_with_promo;
 	}
 
@@ -530,16 +530,16 @@ class GTRO_Settings {
 	 * @return array Liste des groupes sous forme de tableau associatif
 	 */
 	private function get_available_groups_options() {
-		$groups = get_option('gtro_groupes_dates', array());
-		$options = array('' => __('Sélectionnez un groupe', 'gtro-product-manager'));
-		
-		if (!empty($groups)) {
-			foreach ($groups as $group) {
-				$slug = sanitize_title($group);
-				$options[$slug] = $group;
+		$groups  = get_option( 'gtro_groupes_dates', array() );
+		$options = array( '' => __( 'Sélectionnez un groupe', 'gtro-product-manager' ) );
+
+		if ( ! empty( $groups ) ) {
+			foreach ( $groups as $group ) {
+				$slug             = sanitize_title( $group );
+				$options[ $slug ] = $group;
 			}
 		}
-		
+
 		return $options;
 	}
 
@@ -549,7 +549,7 @@ class GTRO_Settings {
 	 * @return bool
 	 */
 	public function should_delete_data() {
-		$settings = get_option('gtro_options');
-		return !empty($settings['delete_data']);
+		$settings = get_option( 'gtro_options' );
+		return ! empty( $settings['delete_data'] );
 	}
 }
