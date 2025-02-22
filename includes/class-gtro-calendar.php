@@ -62,6 +62,31 @@ class GTRO_Calendar {
     	add_action('wp_ajax_nopriv_load_calendar', array($this, 'ajax_load_calendar'));
 	}
 
+	/**
+	 * Convertit le nom du mois en anglais en français
+	 *
+	 * @param string $month_name Nom du mois en anglais
+	 * @return string Nom du mois en français
+	 */
+	private function translate_month($month_name) {
+		$months = array(
+			'January'   => 'Janvier',
+			'February'  => 'Février',
+			'March'     => 'Mars',
+			'April'     => 'Avril',
+			'May'       => 'Mai',
+			'June'      => 'Juin',
+			'July'      => 'Juillet',
+			'August'    => 'Août',
+			'September' => 'Septembre',
+			'October'   => 'Octobre',
+			'November'  => 'Novembre',
+			'December'  => 'Décembre'
+		);
+		
+		return isset($months[$month_name]) ? $months[$month_name] : $month_name;
+	}
+
     /**
      * Initialiser les groupes de dates dynamiquement
      *
@@ -317,7 +342,7 @@ class GTRO_Calendar {
 
 			$html .= '<div class="month-calendar">';
 			$html .= '<div class="month-header">';
-			$html .= '<h3>' . date( 'F', $first_day ) . '</h3>';
+			$html .= '<h3>' . $this->translate_month(date( 'F', $first_day )) . '</h3>';
 			$html .= '</div>';
 
 			// En-têtes des jours de la semaine
