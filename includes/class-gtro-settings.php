@@ -87,7 +87,7 @@ class GTRO_Settings {
 		if (!isset($settings_pages['gtro'])) {
 			$settings_pages['gtro'] = array(
 				'id'          => 'gtro',
-				'menu_title'  => __('GTRO Settings', 'gtro-product-manager'),
+				'menu_title'  => __('Réglages GTRO', 'gtro-product-manager'),
 				'option_name' => 'gtro_options',
 				'tabs'        => array(
 					'voitures'   => __('Voitures', 'gtro-product-manager'),
@@ -96,7 +96,7 @@ class GTRO_Settings {
 					'dates'      => __('Dates', 'gtro-product-manager'),
 					'options'    => __('Options', 'gtro-product-manager'),
 					'categories' => array(
-						'label' => __('Catégories et Combos', 'gtro-product-manager'),
+						'label' => __('Catégories et combos', 'gtro-product-manager'),
 						'icon'  => 'dashicons-category',
 					),
 					// Ajout de l'onglet personnalisation dans le tableau 'tabs'

@@ -90,7 +90,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-dates-manager.php';
 
 			$this->loader   = new GTRO_Loader();
-			$this->settings = new GTRO_Settings(); // Gardez uniquement cette initialisation
+			$this->settings = new GTRO_Settings(); 
 			$this->dates_manager = new GTRO_Dates_Manager();
 		}
 
