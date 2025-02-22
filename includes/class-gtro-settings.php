@@ -24,6 +24,8 @@ class GTRO_Settings {
 
 		// Ajouter un filtre pour mettre à jour dynamiquement les options des selects
     	add_filter('rwmb_select_options', array($this, 'update_category_options'), 10, 2);
+
+		//add_action('init', 'gtro_register_bricks_functions');
 	}
 
 	/**
@@ -434,4 +436,42 @@ class GTRO_Settings {
 		
 		return $options;
 	}
+
+	// Dans ton fichier principal du plugin ou dans includes/functions.php
+	public function gtro_get_dates_with_promo($groupe_name) {
+		$slug = sanitize_title($groupe_name);
+		$dates = rwmb_get_value('dates_' . $slug, ['object_type' => 'setting'], 'gtro');
+		$dates_with_promo = array();
+		
+		if (!empty($dates)) {
+			foreach ($dates as $date_entry) {
+				if (isset($date_entry['promo']) && $date_entry['promo'] > 0) {
+					$dates_with_promo[] = array(
+						'date' => $date_entry['date'],
+						'promo' => $date_entry['promo']
+					);
+				}
+			}
+		}
+		
+		return $dates_with_promo;
+	}
+
+	/*function gtro_register_bricks_functions() {
+		add_filter('bricks/builder/dynamic_functions', function($functions) {
+			$functions['gtro_get_dates_with_promo'] = [
+				'label' => 'GTRO - Dates avec Promo',
+				'description' => 'Récupère les dates avec promo pour un groupe donné',
+				'arguments' => [
+					'groupe_name' => [
+						'label' => 'Nom du groupe',
+						'type' => 'text',
+						'required' => true,
+					],
+				],
+			];
+			
+			return $functions;
+		});
+	}*/
 }

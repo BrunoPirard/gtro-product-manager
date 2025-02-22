@@ -44,6 +44,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		private static $instance = null;
 		private $settings;
 		private $calendar;
+		public $dates_manager;
 
 		/**
 		 * Define the core functionality of the plugin.
@@ -51,21 +52,25 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @since 1.0.0
 		 */
 		public function __construct() {
-			if ( self::$instance === null ) {
-				self::$instance = $this;
-
-				if ( defined( 'GTRO_VERSION' ) ) {
-					$this->version = GTRO_VERSION;
-				} else {
-					$this->version = '1.0.0';
-				}
-				$this->plugin_name = 'gtro-product-manager';
-
-				$this->load_dependencies();
-				$this->set_locale();
-				$this->define_admin_hooks();
-				$this->define_public_hooks();
+			// Éviter l'initialisation multiple
+			if (self::$instance !== null) {
+				return self::$instance;
 			}
+
+			self::$instance = $this;
+
+			if (defined('GTRO_VERSION')) {
+				$this->version = GTRO_VERSION;
+			} else {
+				$this->version = '1.0.0';
+			}
+			$this->plugin_name = 'gtro-product-manager';
+
+			$this->load_dependencies();
+			$this->set_locale();
+			$this->define_admin_hooks();
+			$this->define_public_hooks();
+
 			return self::$instance;
 		}
 
@@ -82,9 +87,23 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-settings.php';
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-woocommerce.php';
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-calendar.php';
+			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-dates-manager.php';
 
 			$this->loader   = new GTRO_Loader();
 			$this->settings = new GTRO_Settings(); // Gardez uniquement cette initialisation
+			$this->dates_manager = new GTRO_Dates_Manager();
+		}
+
+		/**
+		 * Get the singleton instance of this class
+		 *
+		 * @return GTRO_Main
+		 */
+		public static function get_instance() {
+			if (self::$instance === null) {
+				self::$instance = new self();
+			}
+			return self::$instance;
 		}
 
 		/**
