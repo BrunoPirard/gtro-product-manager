@@ -127,6 +127,10 @@ class GTRO_Calendar {
      * @return string The color associated with the date group.
      */
     private function get_group_color($slug) {
+		
+		$settings = get_option('gtro_options');
+		$promo_color = !empty($settings['promo_color']) ? $settings['promo_color'] : '#FFD700';
+
         // Définir des couleurs par défaut ou les récupérer depuis les options
         $colors = array(
             'monoplace' => '#ff6b6b',

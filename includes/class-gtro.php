@@ -236,5 +236,23 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		public function get_available_groups() {
 			return $this->dates_manager->get_available_groups();
 		}
+
+		/**
+		 * Méthode appelée lors de l'activation du plugin
+		 *
+		 * @since 1.0.0
+		 */
+		public static function activate() {
+			// Initialiser les options par défaut si nécessaire
+			$default_options = array(
+				'promo_color' => '#FFD700',
+				'delete_data' => false
+			);
+			
+			$current_options = get_option('gtro_options', array());
+			$merged_options = wp_parse_args($current_options, $default_options);
+			
+			update_option('gtro_options', $merged_options);
+		}
 	}
 }

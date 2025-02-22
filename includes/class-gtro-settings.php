@@ -106,6 +106,10 @@ class GTRO_Settings {
 						'icon'  => 'dashicons-category',
 					),
 				),
+				'personnalisation' => array(
+					'label' => __('Personnalisation', 'gtro-product-manager'),
+					'icon'  => 'dashicons-admin-customizer',
+				),
 			);
 		}
 		return $settings_pages;
@@ -383,6 +387,47 @@ class GTRO_Settings {
 			),
 		);
 
+		// Onglet Personnalisation
+		$meta_boxes[] = array(
+			'title'          => __('Personnalisation GTRO', 'gtro-product-manager'),
+			'id'             => 'personnalisation',
+			'settings_pages' => array('gtro'),
+			'tab'            => 'personnalisation',
+			'fields'         => array(
+				// Section Documentation
+				array(
+					'type' => 'custom_html',
+					'std'  => '
+						<div class="gtro-docs" style="background: #fff; padding: 20px; border-left: 4px solid #2271b1; margin-bottom: 20px;">
+							<h3>' . __('Documentation', 'gtro-product-manager') . '</h3>
+							<h4>' . __('Shortcodes disponibles :', 'gtro-product-manager') . '</h4>
+							<code>[display_calendar]</code> - ' . __('Affiche le calendrier des dates', 'gtro-product-manager') . '<br>
+							<h4>' . __('Fonctions disponibles :', 'gtro-product-manager') . '</h4>
+							<code>get_promo_dates($group_slugs = null)</code> - ' . __('Récupère les dates en promotion', 'gtro-product-manager') . '<br>
+							<code>get_available_groups()</code> - ' . __('Récupère la liste des groupes disponibles', 'gtro-product-manager') . '
+						</div>
+					',
+				),
+				
+				// Couleur des promotions
+				array(
+					'name'    => __('Couleur des dates en promotion', 'gtro-product-manager'),
+					'id'      => 'promo_color',
+					'type'    => 'color',
+					'default' => '#FFD700',
+					'desc'    => __('Choisissez la couleur pour les dates en promotion dans le calendrier', 'gtro-product-manager'),
+				),
+				
+				// Suppression des données
+				array(
+					'name'    => __('Suppression des données', 'gtro-product-manager'),
+					'id'      => 'delete_data',
+					'type'    => 'checkbox',
+					'desc'    => __('Supprimer toutes les données du plugin lors de sa désinstallation', 'gtro-product-manager'),
+				),
+			),
+		);
+
 		return $meta_boxes;
 	}
 
@@ -436,8 +481,13 @@ class GTRO_Settings {
 		
 		return $options;
 	}
-
-	// Dans ton fichier principal du plugin ou dans includes/functions.php
+	
+	/**
+	 * Récupère les dates et leurs promotions associées pour un groupe de dates
+	 * 
+	 * @param string $groupe_name Nom du groupe de dates
+	 * @return array Tableau des dates avec leurs promotions
+	 */
 	public function gtro_get_dates_with_promo($groupe_name) {
 		$slug = sanitize_title($groupe_name);
 		$dates = rwmb_get_value('dates_' . $slug, ['object_type' => 'setting'], 'gtro');
@@ -457,21 +507,13 @@ class GTRO_Settings {
 		return $dates_with_promo;
 	}
 
-	/*function gtro_register_bricks_functions() {
-		add_filter('bricks/builder/dynamic_functions', function($functions) {
-			$functions['gtro_get_dates_with_promo'] = [
-				'label' => 'GTRO - Dates avec Promo',
-				'description' => 'Récupère les dates avec promo pour un groupe donné',
-				'arguments' => [
-					'groupe_name' => [
-						'label' => 'Nom du groupe',
-						'type' => 'text',
-						'required' => true,
-					],
-				],
-			];
-			
-			return $functions;
-		});
-	}*/
+	/**
+	 * Vérifie si les données doivent être supprimées lors de la désinstallation
+	 *
+	 * @return bool
+	 */
+	public function should_delete_data() {
+		$settings = get_option('gtro_options');
+		return !empty($settings['delete_data']);
+	}
 }
