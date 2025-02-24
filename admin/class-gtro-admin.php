@@ -6,12 +6,20 @@
  * @package    GTRO_Product_Manager
  * @subpackage GTRO_Product_Manager/admin
  */
+
 namespace GTRO_Plugin;
 
 if ( ! class_exists( 'GTRO_Plugin\GTRO_Admin' ) ) {
+
+	/**
+	 * Class Admin
+	 *
+	 * Handles admin functionality for the plugin.
+	 *
+	 * @package GTRO_Product_Manager
+	 * @since 1.0.0
+	 */
 	class GTRO_Admin {
-
-
 
 		/**
 		 * The ID of this plugin.
@@ -42,16 +50,16 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Admin' ) ) {
 			$this->plugin_name = $plugin_name;
 			$this->version     = $version;
 
-			// Add menu
+			// Add menu.
 			add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
 
-			// Add Settings link to the plugin
+			// Add Settings link to the plugin.
 			add_filter(
 				'plugin_action_links_' . plugin_basename( GTRO_PLUGIN_DIR . $this->plugin_name . '.php' ),
 				array( $this, 'add_action_links' )
 			);
 
-			// Check if WooCommerce is active
+			// Check if WooCommerce is active.
 			add_action( 'admin_init', array( $this, 'check_woocommerce_dependency' ) );
 		}
 
@@ -86,9 +94,12 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Admin' ) ) {
 		}
 
 		/**
-		 * Add settings action link to the plugins page.
+		 * Add Settings link to the plugin.
 		 *
 		 * @since 1.0.0
+		 *
+		 * @param array $links The links array.
+		 * @return array The links array with the Settings link added.
 		 */
 		public function add_action_links( $links ) {
 			$settings_link = array(
@@ -110,7 +121,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Admin' ) ) {
 					function () {
 						?>
 					<div class="error">
-						<p><?php _e( 'GTRO Product Manager requires WooCommerce to be installed and active.', 'gtro-product-manager' ); ?></p>
+							<p><?php esc_html_e( 'GTRO Product Manager requires WooCommerce to be installed and active.', 'gtro-product-manager' ); ?></p>
 					</div>
 						<?php
 					}
@@ -119,42 +130,12 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Admin' ) ) {
 		}
 
 		/**
-		 * Add options page to admin menu
-		 *
-		 * @since 1.0.0
-		 */
-		public function add_plugin_admin_menu() {
-			// Nous n'avons plus besoin d'ajouter un menu car Meta Box gère déjà cela
-			// via la classe GTRO_Settings
-			return;
-
-			add_menu_page(
-				__( 'GTRO Settings', 'gtro-product-manager' ),
-				__( 'GTRO', 'gtro-product-manager' ),
-				'manage_options',
-				$this->plugin_name,
-				array( $this, 'display_plugin_setup_page' ),
-				'dashicons-calendar-alt',
-				6
-			);
-		}
-
-		/**
-		 * Render the settings page for this plugin.
-		 *
-		 * @since 1.0.0
-		 */
-		public function display_plugin_setup_page() {
-			include_once 'partials/gtro-admin-display.php';
-		}
-
-		/**
 		 * Initialize WooCommerce custom product type
 		 *
 		 * @since 1.0.0
 		 */
 		public function init_gtro_product_type() {
-			// Cette méthode sera implémentée pour créer le type de produit personnalisé
+			// Cette méthode sera implémentée pour créer le type de produit personnalisé.
 		}
 	}
 }

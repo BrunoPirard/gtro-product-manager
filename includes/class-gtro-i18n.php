@@ -10,9 +10,15 @@
 namespace GTRO_Plugin;
 
 if ( ! class_exists( 'GTRO_Plugin\GTRO_i18n' ) ) {
+	/**
+	 * Class i18n
+	 *
+	 * Handles translation for the plugin.
+	 *
+	 * @package GTRO_Product_Manager
+	 * @since 1.0.0
+	 */
 	class GTRO_i18n {
-
-
 
 		/**
 		 * Load the plugin text domain for translation.

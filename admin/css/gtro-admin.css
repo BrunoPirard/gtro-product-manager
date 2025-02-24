@@ -1,40 +1,40 @@
 .gtro-meta-box-container {
-	padding: 12px;
+    padding: 12px;
 }
 
 .gtro-meta-box-container label {
-	display: inline-block;
-	width: 200px;
-	margin-bottom: 10px;
+    display: inline-block;
+    width: 200px;
+    margin-bottom: 10px;
 }
 
 .promo-date-row {
-	margin: 10px 0;
-	display: flex;
-	align-items: center;
-	gap: 10px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .remove-promo-date {
-	color: red;
-	cursor: pointer;
+    color: red;
+    cursor: pointer;
 }
 
 .gtro-admin-content {
-	margin-top: 20px;
+    margin-top: 20px;
 }
 
 .gtro-admin-section {
-	background: #fff;
-	padding: 20px;
-	border: 1px solid #ccd0d4;
-	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
 
 .gtro-admin-actions {
-	margin-top: 20px;
+    margin-top: 20px;
 }
 
 .wp-list-table {
-	margin-top: 15px;
+    margin-top: 15px;
 }

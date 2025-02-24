@@ -72,7 +72,7 @@ function deactivate_gtro() {
 register_activation_hook( __FILE__, 'activate_gtro' );
 register_deactivation_hook( __FILE__, 'deactivate_gtro' );
 
-require GTRO_PLUGIN_DIR . 'includes/class-gtro.php';
+require GTRO_PLUGIN_DIR . 'includes/class-gtro-main.php';
 
 /**
  * Initializes and returns the GTRO_Main plugin instance.

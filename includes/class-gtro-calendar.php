@@ -12,7 +12,14 @@ namespace GTRO_Plugin;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-
+/**
+ * Class Loader
+ *
+ * Handles loading for the plugin.
+ *
+ * @package GTRO_Product_Manager
+ * @since 1.0.0
+ */
 class GTRO_Calendar {
 
 	/**
@@ -33,6 +40,13 @@ class GTRO_Calendar {
 	 */
 	private $version;
 
+	/**
+	 * The date groups of this plugin.
+	 *
+	 * @since  1.0.0
+	 * @access private
+	 * @var    array    $date_groups    The current version of this plugin.
+	 */
 	private $date_groups = array();
 
 	/**
@@ -49,13 +63,13 @@ class GTRO_Calendar {
 	public function __construct( $plugin_name, $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
-		// Initialiser les groupes de dates dynamiquement
+		// Initialiser les groupes de dates dynamiquement.
 		$this->init_date_groups();
 
-		// Enregistrer le shortcode
+		// Enregistrer le shortcode.
 		add_shortcode( 'display_calendar', array( $this, 'calendar_shortcode' ) );
 
-		// Enregistrer les assets
+		// Enregistrer les assets.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 
 		add_action( 'wp_ajax_load_calendar', array( $this, 'ajax_load_calendar' ) );
@@ -65,7 +79,7 @@ class GTRO_Calendar {
 	/**
 	 * Convertit le nom du mois en anglais en français
 	 *
-	 * @param string $month_name Nom du mois en anglais
+	 * @param string $month_name Nom du mois en anglais.
 	 * @return string Nom du mois en français
 	 */
 	private function translate_month( $month_name ) {
@@ -110,7 +124,7 @@ class GTRO_Calendar {
 			$this->date_groups[ $slug ] = array(
 				'meta_key'      => 'dates_' . $slug,
 				'settings_page' => 'gtro_options',
-				'color'         => $this->get_group_color( $slug ), // Vous pouvez définir des couleurs par défaut
+				'color'         => $this->get_group_color( $slug ), // Vous pouvez définir des couleurs par défaut.
 				'name'          => $groupe,
 			);
 		}
@@ -129,7 +143,7 @@ class GTRO_Calendar {
 	private function get_group_color( $slug ) {
 		$settings = get_option( 'gtro_options' );
 
-		// Chercher d'abord dans les couleurs personnalisées
+		// Chercher d'abord dans les couleurs personnalisées.
 		if ( ! empty( $settings['group_colors'] ) ) {
 			foreach ( $settings['group_colors'] as $group_color ) {
 				if ( $group_color['group_name'] === $slug && ! empty( $group_color['color'] ) ) {
@@ -138,7 +152,7 @@ class GTRO_Calendar {
 			}
 		}
 
-		// Couleurs par défaut si aucune couleur personnalisée n'est trouvée
+		// Couleurs par défaut si aucune couleur personnalisée n'est trouvée.
 		$default_colors = array(
 			'monoplace' => '#ff6b6b',
 			'gt'        => '#4ecdc4',
@@ -147,7 +161,18 @@ class GTRO_Calendar {
 		return isset( $default_colors[ $slug ] ) ? $default_colors[ $slug ] : '#' . substr( md5( $slug ), 0, 6 );
 	}
 
-	// Méthode helper pour obtenir la liste des groupes disponibles
+
+	/**
+	 * Retrieve available date groups for selection options.
+	 *
+	 * This function fetches the list of date groups stored in the WordPress options
+	 * and constructs an associative array. The array keys are the sanitized slugs
+	 * of the group names, and the values are the original group names. It includes
+	 * a default option for selecting a group.
+	 *
+	 * @return array An associative array with group slugs as keys and group names
+	 *               as values, including a default option.
+	 */
 	private function get_available_groups_options() {
 		$groups  = get_option( 'gtro_groupes_dates', array() );
 		$options = array( '' => __( 'Sélectionnez un groupe', 'gtro-product-manager' ) );
@@ -171,7 +196,7 @@ class GTRO_Calendar {
 	 * @since 1.0.0
 	 */
 	public function enqueue_styles() {
-		// Enregistrer le CSS
+		// Enregistrer le CSS.
 		wp_register_style(
 			$this->plugin_name . '-calendar',
 			GTRO_PLUGIN_URL . 'public/css/gtro-calendar.css',
@@ -179,7 +204,7 @@ class GTRO_Calendar {
 			$this->version
 		);
 
-		// Enregistrer le JavaScript
+		// Enregistrer le JavaScript.
 		wp_register_script(
 			$this->plugin_name . '-calendar-js',
 			GTRO_PLUGIN_URL . 'public/js/gtro-calendar.js',
@@ -188,7 +213,7 @@ class GTRO_Calendar {
 			true
 		);
 
-		// Localiser le script avec l'URL AJAX
+		// Localiser le script avec l'URL AJAX.
 		wp_localize_script(
 			$this->plugin_name . '-calendar-js',
 			'gtroAjax',
@@ -202,22 +227,20 @@ class GTRO_Calendar {
 	/**
 	 * Shortcode pour afficher le calendrier des dates
 	 *
-	 * @param array $atts {
-	 *                    Shortcode attributes
+	 * @param array $atts Shortcode attributes.
 	 *
-	 * @type string $groups Type de dates à afficher (monoplace, gt ou all)
-	 * @type string $view   Type de vue (month ou list)
-	 * @type int    $year   Année à afficher
-	 * }
+	 * @type string $groups Type de dates à afficher (monoplace, gt ou all).
+	 * @type string $view   Type de vue (month ou list).
+	 * @type int    $year   Année à afficher.
 	 *
 	 * @return string HTML du calendrier
 	 */
 	public function calendar_shortcode( $atts ) {
-		// Charger les styles et scripts nécessaires
+		// Charger les styles et scripts nécessaires.
 		wp_enqueue_style( $this->plugin_name . '-calendar' );
 		wp_enqueue_script( $this->plugin_name . '-calendar-js' );
 
-		// Définir les paramètres par défaut
+		// Définir les paramètres par défaut.
 		$atts = shortcode_atts(
 			array(
 				'groups' => 'all',
@@ -227,10 +250,10 @@ class GTRO_Calendar {
 			$atts
 		);
 
-		// Récupérer les dates
+		// Récupérer les dates.
 		$dates = $this->get_all_dates( $atts['groups'] );
 
-		// Générer et retourner le calendrier
+		// Générer et retourner le calendrier.
 		return $this->generate_calendar( $dates, $atts['year'] );
 	}
 
@@ -246,7 +269,6 @@ class GTRO_Calendar {
 	 */
 	public function ajax_load_calendar() {
 		$year = isset( $_POST['year'] ) ? intval( $_POST['year'] ) : gmdate( 'Y' );
-		// error_log('Année demandée: ' . $year);
 
 		$dates    = $this->get_all_dates( 'all', $year );
 		$calendar = $this->generate_calendar( $dates, $year );
@@ -256,41 +278,37 @@ class GTRO_Calendar {
 	}
 
 	/**
-	 * Retrieves all dates grouped by type (monoplace or gt)
+	 * Retrieves all dates for a given year, filtered by date groups.
 	 *
-	 * @since 1.0.0
+	 * @param string $groups Type de dates à afficher (monoplace, gt ou all).
+	 * @param int    $year   Année à afficher.
 	 *
-	 * @param string $groups If 'all', retrieves all dates. If 'monoplace' or 'gt',
-	 *                       only retrieves dates for the specified type.
-	 *
-	 * @return array An array of dates, each with keys 'date', 'group', 'color', and 'name'.
-	 *               The 'group' key is either 'monoplace' or 'gt'. The 'color' key is the color
-	 *               of the date, which is yellow if the date has a promo value greater than 0.
-	 *               The 'name' key is the name of the group, with a promo value appended if applicable.
+	 * @return array Tableau de dates, chaque date étant un tableau contenant
+	 *               les clés date, group, color et name.
 	 */
 	private function get_all_dates( $groups = 'all', $year = null ) {
 		$all_dates = array();
 		$year      = $year ?: gmdate( 'Y' );
 
-		// Récupérer les options, y compris la couleur de promotion
+		// Récupérer les options, y compris la couleur de promotion.
 		$settings    = get_option( 'gtro_options' );
-		$promo_color = ! empty( $settings['promo_color'] ) ? $settings['promo_color'] : '#FFD700'; // Couleur par défaut si non définie
+		$promo_color = ! empty( $settings['promo_color'] ) ? $settings['promo_color'] : '#FFD700'; // Couleur par défaut si non définie.
 
 		foreach ( $this->date_groups as $group_key => $group_info ) {
-			if ( $groups === 'all' || $groups === $group_key ) {
+			if ( 'all' === $groups || $groups === $group_key ) {
 				$dates_group = get_option( 'gtro_options' );
 
 				if ( isset( $dates_group[ $group_info['meta_key'] ] ) ) {
 					foreach ( $dates_group[ $group_info['meta_key'] ] as $entry ) {
 						if ( ! empty( $entry['date'] ) ) {
-							$date_year = date( 'Y', strtotime( $entry['date'] ) );
-							if ( $date_year == $year ) {
-								// Utiliser la couleur de promotion depuis les paramètres
+							$date_year = gmdate( 'Y', strtotime( $entry['date'] ) );
+							if ( $date_year === $year ) {
+								// Utiliser la couleur de promotion depuis les paramètres.
 								$color = isset( $entry['promo'] ) && $entry['promo'] > 0
-									? $promo_color  // Utiliser la couleur de promotion personnalisée
-									: $group_info['color'];  // Couleur normale du groupe
+									? $promo_color  // Utiliser la couleur de promotion personnalisée.
+									: $group_info['color'];  // Couleur normale du groupe.
 
-								// Créer le nom de l'événement
+								// Créer le nom de l'événement.
 								$event_name = $group_info['name'];
 								if ( isset( $entry['promo'] ) && $entry['promo'] > 0 ) {
 									$event_name .= ' (Promo: ' . $entry['promo'] . '%)';
@@ -312,17 +330,22 @@ class GTRO_Calendar {
 	}
 
 	/**
-	 * Génère un calendrier annuel affichant les événements groupés par mois.
+	 * Génère le calendrier HTML pour une année donnée
 	 *
-	 * @param  array $dates Tableau contenant les événements, avec les clés 'date', 'group', 'color' et 'name'.
-	 * @return string Le code HTML du calendrier annuel.
+	 * @since 1.0.0
+	 *
+	 * @param array $dates Tableau de dates, chaque date étant un tableau
+	 *                     contenant les clés 'date', 'group', 'color', et 'name'.
+	 * @param int   $year  Année du calendrier.
+	 *
+	 * @return string HTML du calendrier.
 	 */
 	private function generate_calendar( $dates, $year ) {
-		$html = '<div class="calendar-content">';  // Conteneur principal
+		$html = '<div class="calendar-content">';  // Conteneur principal.
 
-		// 1. Section navigation et légende (statique)
+		// 1. Section navigation et légende (statique).
 		$html .= '<div class="calendar-header">';
-		// Navigation
+		// Navigation.
 		$html .= '<div class="calendar-navigation">';
 		$html .= sprintf(
 			'<button class="prev-year" data-year="%d">← %d</button>',
@@ -337,7 +360,7 @@ class GTRO_Calendar {
 		);
 		$html .= '</div>';
 
-		// Légende
+		// Légende.
 		$html       .= '<div class="calendar-legend">';
 		$settings    = get_option( 'gtro_options' );
 		$promo_color = ! empty( $settings['promo_color'] ) ? $settings['promo_color'] : '#FFD700';
@@ -350,20 +373,20 @@ class GTRO_Calendar {
 			);
 			$html .= sprintf(
 				'<div class="legend-item"><span class="color-dot" style="background-color: %s"></span> %s (Promo)</div>',
-				$promo_color, // Utiliser la couleur de promotion personnalisée
+				$promo_color, // Utiliser la couleur de promotion personnalisée.
 				$group_info['name']
 			);
 		}
 		$html .= '</div></div>';
 
-		// 2. Section calendrier (partie qui sera mise à jour par AJAX)
+		// 2. Section calendrier (partie qui sera mise à jour par AJAX).
 		$html .= '<div class="calendar-container">';
 		if ( empty( $dates ) ) {
 			$html .= '<div class="no-dates-message">Aucune date disponible pour l\'année ' . $year . '</div>';
 		}
 
 		$html .= '<div class="custom-calendar-year">';
-		// Génération des mois
+		// Génération des mois.
 		for ( $month = 1; $month <= 12; $month++ ) {
 			$first_day         = mktime( 0, 0, 0, $month, 1, $year );
 			$number_days       = gmdate( 't', $first_day );
@@ -371,17 +394,17 @@ class GTRO_Calendar {
 
 			$html .= '<div class="month-calendar">';
 			$html .= '<div class="month-header">';
-			$html .= '<h3>' . $this->translate_month( date( 'F', $first_day ) ) . '</h3>';
+			$html .= '<h3>' . $this->translate_month( gmdate( 'F', $first_day ) ) . '</h3>';
 			$html .= '</div>';
 
-			// En-têtes des jours de la semaine
+			// En-têtes des jours de la semaine.
 			$html .= '<div class="calendar-grid">';
 			$days  = array( 'D', 'L', 'M', 'M', 'J', 'V', 'S' );
 			foreach ( $days as $day ) {
 				$html .= '<div class="calendar-header-cell">' . $day . '</div>';
 			}
 
-			// Cases du calendrier
+			// Cases du calendrier.
 			$day_count   = 1;
 			$total_cells = $first_day_of_week + $number_days;
 
@@ -393,7 +416,7 @@ class GTRO_Calendar {
 					$html        .= '<div class="calendar-cell">';
 					$html        .= $day_count;
 
-					// Vérifier si des événements existent pour cette date
+					// Vérifier si des événements existent pour cette date.
 					foreach ( $dates as $event ) {
 						if ( $event['date'] === $current_date ) {
 							$html .= sprintf(
@@ -409,11 +432,11 @@ class GTRO_Calendar {
 				}
 			}
 
-			$html .= '</div></div>'; // Fin du mois
+			$html .= '</div></div>'; // Fin du mois.
 		}
 
-		$html .= '</div>'; // Fin custom-calendar-year
-		$html .= '</div>'; // Fin calendar-container
+		$html .= '</div>'; // Fin custom-calendar-year.
+		$html .= '</div>'; // Fin calendar-container.
 
 		return $html;
 	}

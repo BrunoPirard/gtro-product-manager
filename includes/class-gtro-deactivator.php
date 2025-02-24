@@ -8,7 +8,16 @@
 
 namespace GTRO_Plugin;
 
+/**
+ * Class Deactivator
+ *
+ * Handles deactivation for the plugin.
+ *
+ * @package GTRO_Product_Manager
+ * @since 1.0.0
+ */
 class GTRO_Deactivator {
+
 
 	/**
 	 * Actions à effectuer lors de la désactivation du plugin
@@ -16,7 +25,7 @@ class GTRO_Deactivator {
 	 * @since 1.0.0
 	 */
 	public static function deactivate() {
-		// Sauvegarder l'état actuel si nécessaire
+		// Sauvegarder l'état actuel si nécessaire.
 		$current_state = array(
 			'version'           => GTRO_VERSION,
 			'last_deactivation' => current_time( 'mysql' ),
@@ -24,10 +33,10 @@ class GTRO_Deactivator {
 		);
 		update_option( 'gtro_deactivation_state', $current_state );
 
-		// Nettoyer les tâches programmées si elles existent
+		// Nettoyer les tâches programmées si elles existent.
 		wp_clear_scheduled_hook( 'gtro_daily_cleanup' );
 
-		// Vider les caches transitoires
+		// Vider les caches transitoires.
 		delete_transient( 'gtro_cache_calendar' );
 		delete_transient( 'gtro_cache_dates' );
 	}
@@ -40,8 +49,8 @@ class GTRO_Deactivator {
 	public static function restore_state() {
 		$saved_state = get_option( 'gtro_deactivation_state' );
 		if ( $saved_state ) {
-			// Restaurer les paramètres si nécessaire
-			// Code de restauration ici
+			// Restaurer les paramètres si nécessaire.
+			// Code de restauration ici.
 		}
 	}
 }

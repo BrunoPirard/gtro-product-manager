@@ -19,13 +19,14 @@ namespace GTRO_Plugin;
  */
 class GTRO_Activator {
 
+
 	/**
 	 * Méthode exécutée lors de l'activation du plugin
 	 *
 	 * Vérifie si le plugin Meta Box est installé et activé.
 	 * Si ce n'est pas le cas, désactive le plugin et affiche un message d'erreur.
 	 *
-	 * @since 1.0.0
+	 * @since  1.0.0
 	 * @return void
 	 */
 	public static function activate() {

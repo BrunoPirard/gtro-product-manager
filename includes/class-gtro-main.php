@@ -6,12 +6,19 @@
  * @package    GTRO_Product_Manager
  * @subpackage GTRO_Product_Manager/includes
  */
+
 namespace GTRO_Plugin;
 
 if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
+	/**
+	 * Class Main
+	 *
+	 * Handles main functionality for the plugin.
+	 *
+	 * @package GTRO_Product_Manager
+	 * @since 1.0.0
+	 */
 	class GTRO_Main {
-
-
 
 		/**
 		 * The loader that's responsible for maintaining and registering all hooks that power
@@ -41,9 +48,40 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 */
 		protected $version;
 
+		/**
+		 * The current instance of the plugin.
+		 *
+		 * @since  1.0.0
+		 * @access private
+		 * @var    object
+		 */
 		private static $instance = null;
+
+		/**
+		 * The current settigs of the plugin.
+		 *
+		 * @since  1.0.0
+		 * @access private
+		 * @var    object
+		 */
 		private $settings;
+
+		/**
+		 * The current calendar of the plugin.
+		 *
+		 * @since  1.0.0
+		 * @access private
+		 * @var    object
+		 */
 		private $calendar;
+
+		/**
+		 * The current dates manager of the plugin.
+		 *
+		 * @since  1.0.0
+		 * @access private
+		 * @var    object
+		 */
 		public $dates_manager;
 
 		/**
@@ -52,8 +90,8 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @since 1.0.0
 		 */
 		public function __construct() {
-			// Éviter l'initialisation multiple
-			if ( self::$instance !== null ) {
+			// Éviter l'initialisation multiple.
+			if ( null !== self::$instance ) {
 				return self::$instance;
 			}
 
@@ -100,7 +138,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @return GTRO_Main
 		 */
 		public static function get_instance() {
-			if ( self::$instance === null ) {
+			if ( null === self::$instance ) {
 				self::$instance = new self();
 			}
 			return self::$instance;
@@ -130,12 +168,12 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 			$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 			$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
-			// Désactiver les produits variables
+			// Désactiver les produits variables.
 			$this->loader->add_filter( 'product_type_selector', $this, 'remove_variable_product_type' );
 			$this->loader->add_action( 'admin_head', $this, 'hide_variable_product_options' );
 			$this->loader->add_filter( 'woocommerce_ajax_variation_threshold', $this, 'disable_variations' );
 
-			// Initialiser l'intégration WooCommerce si WooCommerce est actif
+			// Initialiser l'intégration WooCommerce si WooCommerce est actif.
 			if ( class_exists( 'WooCommerce' ) ) {
 				new GTRO_WooCommerce();
 			}
@@ -144,7 +182,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		/**
 		 * Remove variable product type from product type selector
 		 *
-		 * @param array $types Product types
+		 * @param  array $types Product types.
 		 * @return array Modified product types
 		 */
 		public function remove_variable_product_type( $types ) {
@@ -173,8 +211,15 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 			return 0;
 		}
 
+		/**
+		 * Register all of the hooks related to the public-facing functionality
+		 * of the plugin.
+		 *
+		 * @since  1.0.0
+		 * @access private
+		 */
 		private function define_public_hooks() {
-			// Initialiser le calendrier
+			// Initialiser le calendrier.
 			$this->calendar = new GTRO_Calendar( $this->get_plugin_name(), $this->get_version() );
 		}
 
@@ -221,7 +266,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		/**
 		 * Helper method to get promo dates
 		 *
-		 * @param string|array|null $group_slugs Le(s) slug(s) du/des groupe(s)
+		 * @param  string|array|null $group_slugs Le(s) slug(s) du/des groupe(s).
 		 * @return array Liste des dates en promotion
 		 */
 		public function get_promo_dates( $group_slugs = null ) {
@@ -243,7 +288,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @since 1.0.0
 		 */
 		public static function activate() {
-			// Initialiser les options par défaut si nécessaire
+			// Initialiser les options par défaut si nécessaire.
 			$default_options = array(
 				'promo_color' => '#FFD700',
 				'delete_data' => false,
