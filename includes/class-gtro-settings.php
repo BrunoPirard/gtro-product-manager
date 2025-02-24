@@ -143,6 +143,8 @@ class GTRO_Settings {
 					'id'     => 'voitures_gtro',
 					'type'   => 'group',
 					'clone'  => true,
+					'sort_clone'        => true,
+                	'clone_default'     => false,
 					'fields' => array(
 						array(
 							'name' => __( 'Modèles', 'gtro-product-manager' ),
@@ -182,6 +184,8 @@ class GTRO_Settings {
 					'id'     => 'prix_categories',
 					'type'   => 'group',
 					'clone'  => true,
+					'sort_clone'        => true,
+                	'clone_default'     => false,
 					'fields' => array(
 						array(
 							'name'    => __( 'Catégorie', 'gtro-product-manager' ),
@@ -201,6 +205,8 @@ class GTRO_Settings {
 					'id'     => 'combos_voitures',
 					'type'   => 'group',
 					'clone'  => true,
+					'sort_clone'        => true,
+                	'clone_default'     => false,
 					'fields' => array(
 						array(
 							'name'    => __( 'Nom promo combo', 'gtro-product-manager' ),
@@ -328,6 +334,8 @@ class GTRO_Settings {
 					'id'     => 'options_supplementaires',
 					'type'   => 'group',
 					'clone'  => true,
+					'sort_clone'        => true,
+                	'clone_default'     => false,
 					'fields' => array(
 						array(
 							'name' => __( 'Options', 'gtro-product-manager' ),
@@ -393,11 +401,12 @@ class GTRO_Settings {
 				array(
 					'type' => 'custom_html',
 					'std'  => '
-						<div class="gtro-docs" style="background: #fff; padding: 20px; border-left: 4px solid #2271b1; margin-bottom: 20px;">
-							<h3>' . __( 'Documentation', 'gtro-product-manager' ) . '</h3>
+						<div class="gtro-docs" style="background: #fff; padding: 20px; border-left: 4px solid #2271b1;">
+							<h3 style="margin : 0px 0px 0px 0px">' . __( 'Documentation', 'gtro-product-manager' ) . '</h3>
 							<h4>' . __( 'Shortcodes disponibles :', 'gtro-product-manager' ) . '</h4>
 							<code>[display_calendar]</code> - ' . __( 'Affiche le calendrier des dates', 'gtro-product-manager' ) . '<br>
-							<h4>' . __( 'Fonctions disponibles :', 'gtro-product-manager' ) . '</h4>
+							<code>[display_calendar groups="monoplace"]</code> - ' . __( 'Affiche le calendrier des dates par groupe', 'gtro-product-manager' ) . '<br>
+							</br><h4>' . __( 'Fonctions disponibles :', 'gtro-product-manager' ) . '</h4>
 							<code>get_promo_dates($group_slugs = null)</code> - ' . __( 'Récupère les dates en promotion', 'gtro-product-manager' ) . '<br>
 							<code>get_available_groups()</code> - ' . __( 'Récupère la liste des groupes disponibles', 'gtro-product-manager' ) . '
 						</div>
