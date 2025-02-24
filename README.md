@@ -17,7 +17,37 @@ Plugin WordPress/WooCommerce pour la gestion de réservations de tours en voitur
 
 ## Structure du plugin
 
-gtro-product-manager/ ├── admin/ │ ├── css/ │ │ └── gtro-admin.css │ ├── js/ │ │ └── gtro-admin.js ├── public/ │ ├── css/ │ │ ├── gtro-public.css │ │ └── gtro-calendar.css │ ├── js/ │ │ ├── gtro-public.js │ │ └── gtro-calendar.js ├── includes/ │ ├── class-gtro-activator.php │ ├── class-gtro-deactivator.php │ ├── class-gtro-i18n.php │ ├── class-gtro-loader.php │ ├── class-gtro-metabox.php │ ├── class-gtro-settings.php │ ├── class-gtro-calendar.php │ └── templates/ │ └── calendar.php ├── languages/ │ └── gtro-product-manager.pot ├── index.php ├── uninstall.php └── gtro-product-manager.php
+gtro-product-manager/
+├── admin/
+│ ├── css/
+│ │ └── gtro-admin.css
+│ ├── js/
+│ │ └── gtro-admin.js
+│ └── class-gtro-admin.php
+├── includes/
+│ ├── class-gtro-activator.php
+│ ├── class-gtro-calendar.php
+│ ├── class-gtro-dates-manager.php
+│ ├── class-gtro-deactivator.php
+├── class-gtro-i8n.php
+├── class-gtro-loader.php
+├── class-gtro-settings.php
+├── class-gtro-woocommerce.php
+│ └── class-gtro.php
+├── languages/
+│ └── gtro-product-manager.pot
+├── public/
+│ ├── css/
+├── gtro-calendar.css
+│ │ └── gtro-public.css
+│ ├── js/
+├── gtro-calendar.js
+│ │ └── gtro-public.js
+│ └── class-gtro-public.php
+├── index.php
+├── uninstall.php
+├── README.md
+└── gtro-product-manager.php
 
 # Points à améliorer/développer
 
