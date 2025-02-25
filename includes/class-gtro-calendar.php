@@ -255,7 +255,8 @@ class GTRO_Calendar {
 		);
 
 		// Récupérer les dates.
-		$dates = $this->get_all_dates( $atts['groups'] );
+		// Modification ici : passer explicitement l'année.
+		$dates = $this->get_all_dates( $atts['groups'], $atts['year'] );
 
 		// Générer et retourner le calendrier.
 		return $this->generate_calendar( $dates, $atts['year'] );
@@ -272,20 +273,14 @@ class GTRO_Calendar {
 	 * @since 1.0.0
 	 */
 	public function ajax_load_calendar() {
-		// Vérifier le nonce.
 		if ( ! check_ajax_referer( 'gtro_calendar_nonce', 'nonce', false ) ) {
 			wp_send_json_error( 'Invalid nonce' );
 			wp_die();
 		}
 
 		$year = isset( $_POST['year'] ) ? intval( $_POST['year'] ) : gmdate( 'Y' );
-		// Sanitize l'entrée.
-		$year = filter_var( $year, FILTER_VALIDATE_INT );
-		if ( ! $year ) {
-			$year = gmdate( 'Y' );
-		}
 
-		$dates    = $this->get_all_dates( 'all', $year );
+		$dates = $this->get_all_dates( 'all', $year );
 		$calendar = $this->generate_calendar( $dates, $year );
 
 		wp_send_json_success( $calendar );
@@ -302,31 +297,33 @@ class GTRO_Calendar {
 	 *               les clés date, group, color et name.
 	 */
 	private function get_all_dates( $groups = 'all', $year = null ) {
-		$all_dates = array();
 
+		$all_dates = array();
 		if ( ! $year ) {
 			$year = gmdate( 'Y' );
 		}
+		$year = intval( $year );
 
-		// Récupérer les options, y compris la couleur de promotion.
-		$settings    = get_option( 'gtro_options' );
-		$promo_color = ! empty( $settings['promo_color'] ) ? $settings['promo_color'] : '#FFD700'; // Couleur par défaut si non définie.
+		// Récupérer les options une seule fois.
+		$settings = get_option( 'gtro_options' );
+		$promo_color = ! empty( $settings['promo_color'] ) ? $settings['promo_color'] : '#FFD700';
 
 		foreach ( $this->date_groups as $group_key => $group_info ) {
 			if ( 'all' === $groups || $groups === $group_key ) {
-				$dates_group = get_option( 'gtro_options' );
+				// Utiliser directement la clé dates_[group_key].
+				$dates_key = 'dates_' . $group_key;
 
-				if ( isset( $dates_group[ $group_info['meta_key'] ] ) ) {
-					foreach ( $dates_group[ $group_info['meta_key'] ] as $entry ) {
+				if ( isset( $settings[ $dates_key ] ) && is_array( $settings[ $dates_key ] ) ) {
+
+					foreach ( $settings[ $dates_key ] as $entry ) {
 						if ( ! empty( $entry['date'] ) ) {
-							$date_year = gmdate( 'Y', strtotime( $entry['date'] ) );
+							$date_year = intval( gmdate( 'Y', strtotime( $entry['date'] ) ) );
+
 							if ( $date_year === $year ) {
-								// Utiliser la couleur de promotion depuis les paramètres.
 								$color = ( isset( $entry['promo'] ) && $entry['promo'] > 0 )
 									? $promo_color
 									: $group_info['color'];
 
-								// Créer le nom de l'événement.
 								$event_name = $group_info['name'];
 								if ( isset( $entry['promo'] ) && $entry['promo'] > 0 ) {
 									$event_name .= ' (Promo: ' . $entry['promo'] . '%)';
