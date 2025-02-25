@@ -120,7 +120,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 */
 		private function load_dependencies() {
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-loader.php';
-			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-i18n.php';
+			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-I18n.php';
 			include_once GTRO_PLUGIN_DIR . 'admin/class-gtro-admin.php';
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-settings.php';
 			include_once GTRO_PLUGIN_DIR . 'includes/class-gtro-woocommerce.php';
@@ -151,7 +151,7 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Main' ) ) {
 		 * @access private
 		 */
 		private function set_locale() {
-			$plugin_i18n = new GTRO_i18n();
+			$plugin_i18n = new GTRO_I18n();
 			$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 		}
 

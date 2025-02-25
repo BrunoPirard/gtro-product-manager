@@ -71,25 +71,37 @@ class GTRO_Settings {
 	}
 
 	/**
-	 * Handle the creation of a new date group after saving post data.
+	 * Handle the submission of a new group name.
 	 *
-	 * @param int          $post_id The ID of the saved post.
-	 * @param WP_Post|null $post    The post object (optional).
 	 * @since 1.0.0
 	 */
-	public function handle_new_group( $post_id, $post = null ) {
+	public function handle_new_group() {
+		// Vérification du nonce.
+		if ( ! isset( $_POST['gtro_new_group_nonce'] ) ) {
+			return;
+		}
+
+		$nonce = wp_unslash( $_POST['gtro_new_group_nonce'] );
+		if ( ! wp_verify_nonce( $nonce, 'gtro_new_group_action' ) ) {
+			return;
+		}
+
+		// Vérification de l'existence des données.
 		if ( ! isset( $_POST['nouveau_groupe'] ) || empty( $_POST['nouveau_groupe'] ) ) {
 			return;
 		}
 
-		$nouveau_groupe    = sanitize_text_field( $_POST['nouveau_groupe'] );
-		$groupes_existants = get_option( 'gtro_groupes_dates', array() );
+		// Nettoyage et validation des données.
+		$nouveau_groupe = sanitize_text_field( wp_unslash( $_POST['nouveau_groupe'] ) );
 
+		// Traitement des données.
+		$groupes_existants = get_option( 'gtro_groupes_dates', array() );
 		if ( ! in_array( $nouveau_groupe, $groupes_existants, true ) ) {
 			$groupes_existants[] = $nouveau_groupe;
 			update_option( 'gtro_groupes_dates', $groupes_existants );
 		}
 	}
+
 
 	/**
 	 * Register the settings page for GTRO.
@@ -310,14 +322,18 @@ class GTRO_Settings {
 		$groupes_existants = get_option( 'gtro_groupes_dates', array() ); // Stocke les noms des groupes.
 		if ( ! empty( $groupes_existants ) ) {
 			foreach ( $groupes_existants as $groupe ) {
-				$slug         = sanitize_title( $groupe );
+				$slug = sanitize_title( $groupe );
+
 				$meta_boxes[] = array(
+					/* translators: %s: Nom du groupe de dates */
 					'title'          => sprintf( __( 'Dates %s', 'gtro-product-manager' ), $groupe ),
 					'id'             => 'dates_' . $slug,
 					'settings_pages' => array( 'gtro' ),
 					'tab'            => 'dates',
+					// translators: %s: Groupe de dates.
 					'fields'         => array(
 						array(
+							/* translators: %s: Nom du groupe de dates */
 							'name'       => sprintf( __( 'Dates disponibles - %s', 'gtro-product-manager' ), $groupe ),
 							'id'         => 'dates_' . $slug,
 							'type'       => 'group',

@@ -1,5 +1,12 @@
 <?php
-// templates/product-data-panel.php
+/**
+ * The calendar functionality of the plugin.
+ *
+ * @since      1.0.0
+ * @package    GTRO_Product_Manager
+ * @subpackage GTRO_Product_Manager/admin
+ */
+
 ?>
 <div id="circuit_dates_options" class="panel woocommerce_options_panel">
 	<?php

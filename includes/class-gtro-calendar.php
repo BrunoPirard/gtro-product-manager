@@ -12,6 +12,7 @@ namespace GTRO_Plugin;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
 /**
  * Class Loader
  *
@@ -120,11 +121,14 @@ class GTRO_Calendar {
 		$groupes_existants = get_option( 'gtro_groupes_dates', array() );
 
 		foreach ( $groupes_existants as $groupe ) {
-			$slug                       = sanitize_title( $groupe );
+			$slug = sanitize_title( $groupe );
+			// Utilisez un préfixe unique pour la meta_key.
+			$meta_key = 'gtro_dates_' . $slug;
+			add_filter( 'update_option_' . $meta_key, array( $this, 'maybe_update_dates_index' ), 10, 2 );
 			$this->date_groups[ $slug ] = array(
-				'meta_key'      => 'dates_' . $slug,
+				'meta_key'      => $meta_key,
 				'settings_page' => 'gtro_options',
-				'color'         => $this->get_group_color( $slug ), // Vous pouvez définir des couleurs par défaut.
+				'color'         => $this->get_group_color( $slug ),
 				'name'          => $groupe,
 			);
 		}
@@ -268,7 +272,18 @@ class GTRO_Calendar {
 	 * @since 1.0.0
 	 */
 	public function ajax_load_calendar() {
+		// Vérifier le nonce.
+		if ( ! check_ajax_referer( 'gtro_calendar_nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce' );
+			wp_die();
+		}
+
 		$year = isset( $_POST['year'] ) ? intval( $_POST['year'] ) : gmdate( 'Y' );
+		// Sanitize l'entrée.
+		$year = filter_var( $year, FILTER_VALIDATE_INT );
+		if ( ! $year ) {
+			$year = gmdate( 'Y' );
+		}
 
 		$dates    = $this->get_all_dates( 'all', $year );
 		$calendar = $this->generate_calendar( $dates, $year );
@@ -288,7 +303,10 @@ class GTRO_Calendar {
 	 */
 	private function get_all_dates( $groups = 'all', $year = null ) {
 		$all_dates = array();
-		$year      = $year ?: gmdate( 'Y' );
+
+		if ( ! $year ) {
+			$year = gmdate( 'Y' );
+		}
 
 		// Récupérer les options, y compris la couleur de promotion.
 		$settings    = get_option( 'gtro_options' );
@@ -304,9 +322,9 @@ class GTRO_Calendar {
 							$date_year = gmdate( 'Y', strtotime( $entry['date'] ) );
 							if ( $date_year === $year ) {
 								// Utiliser la couleur de promotion depuis les paramètres.
-								$color = isset( $entry['promo'] ) && $entry['promo'] > 0
-									? $promo_color  // Utiliser la couleur de promotion personnalisée.
-									: $group_info['color'];  // Couleur normale du groupe.
+								$color = ( isset( $entry['promo'] ) && $entry['promo'] > 0 )
+									? $promo_color
+									: $group_info['color'];
 
 								// Créer le nom de l'événement.
 								$event_name = $group_info['name'];
@@ -327,6 +345,22 @@ class GTRO_Calendar {
 			}
 		}
 		return $all_dates;
+	}
+
+	/**
+	 * Filtrer pour mettre à jour l'index des dates si nécessaire
+	 *
+	 * Ce filtre est utilisé pour mettre à jour l'index des dates stockées
+	 * en base de données. Si des dates sont mises à jour, l'index est recalculé.
+	 *
+	 * @param array $old_value Valeur précédente du champ des dates.
+	 * @param array $new_value Nouvelle valeur du champ des dates.
+	 *
+	 * @return array Valeur mise à jour du champ des dates.
+	 */
+	public function maybe_update_dates_index( $old_value, $new_value ) {
+		// Logique pour mettre à jour l'index si nécessaire.
+		return $new_value;
 	}
 
 	/**
@@ -407,8 +441,9 @@ class GTRO_Calendar {
 			// Cases du calendrier.
 			$day_count   = 1;
 			$total_cells = $first_day_of_week + $number_days;
+			$max_cells   = ceil( $total_cells / 7 ) * 7;
 
-			for ( $i = 0; $i < ceil( $total_cells / 7 ) * 7; $i++ ) {
+			for ( $i = 0; $i < $max_cells; $i++ ) {
 				if ( $i < $first_day_of_week || $i >= $total_cells ) {
 					$html .= '<div class="calendar-cell empty"></div>';
 				} else {

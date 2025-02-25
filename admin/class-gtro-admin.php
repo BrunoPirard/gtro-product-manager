@@ -50,9 +50,6 @@ if ( ! class_exists( 'GTRO_Plugin\GTRO_Admin' ) ) {
 			$this->plugin_name = $plugin_name;
 			$this->version     = $version;
 
-			// Add menu.
-			add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
-
 			// Add Settings link to the plugin.
 			add_filter(
 				'plugin_action_links_' . plugin_basename( GTRO_PLUGIN_DIR . $this->plugin_name . '.php' ),
