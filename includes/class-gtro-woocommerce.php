@@ -790,10 +790,9 @@ class GTRO_WooCommerce {
 	 *
 	 * @param  array $cart_item_data Les données du produit dans le panier.
 	 * @param  int   $product_id     L'ID du produit.
-	 * @param  int   $variation_id   L'ID de la variation du produit.
 	 * @return array Les données du produit mises à jour.
 	 */
-	public function add_gtro_options_to_cart( $cart_item_data, $product_id, $variation_id ) {
+	public function add_gtro_options_to_cart( $cart_item_data, $product_id ) {
 
 		// Ajouter la vérification du nonce.
 		if ( ! isset( $_POST['gtro_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gtro_nonce'] ) ), 'gtro_add_to_cart' ) ) {
@@ -859,11 +858,10 @@ class GTRO_WooCommerce {
 	 * @param  bool $passed     Si la validation est
 	 *                          passée.
 	 * @param  int  $product_id L'ID du produit.
-	 * @param  int  $quantity   La quantité du
-	 *                          produit.
+	 *
 	 * @return bool Si la validation est passée.
 	 */
-	public function validate_gtro_options( $passed, $product_id, $quantity ) {
+	public function validate_gtro_options( $passed, $product_id ) {
 
 		// Vérifier si c'est une soumission de formulaire.
 		if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
@@ -1045,39 +1043,6 @@ class GTRO_WooCommerce {
 	}
 
 	/**
-	 * Ajoute les métadonnées GTRO à la commande.
-	 *
-	 * Récupère les données GTRO du produit et les ajoute
-	 * en tant que métadonnées à la commande.
-	 *
-	 * @param WC_Order_Item $item          L'élément de la commande.
-	 * @param string        $cart_item_key La clé de l'élément du panier.
-	 * @param array         $values        Les valeurs du formulaire GTRO.
-	 * @param WC_Order      $order         La commande.
-	 */
-	public function add_custom_order_line_item_meta( $item, $cart_item_key, $values, $order ) {
-		if ( isset( $values['gtro_vehicle'] ) ) {
-			$item->add_meta_data( __( 'Véhicules', 'gtro-product-manager' ), str_replace( ',', ', ', $values['gtro_vehicle'] ) );
-		}
-
-		if ( isset( $values['gtro_extra_laps'] ) && $values['gtro_extra_laps'] > 0 ) {
-			$item->add_meta_data( __( 'Tours supplémentaires', 'gtro-product-manager' ), $values['gtro_extra_laps'] );
-		}
-
-		if ( isset( $values['gtro_formule_option'] ) ) {
-			$item->add_meta_data( __( 'Formule', 'gtro-product-manager' ), $values['gtro_formule_option'] );
-		}
-
-		if ( isset( $values['gtro_date'] ) && ! empty( $values['gtro_date'] ) ) {
-			$item->add_meta_data( __( 'Date', 'gtro-product-manager' ), $values['gtro_date'] );
-		}
-
-		if ( isset( $values['gtro_options'] ) && ! empty( $values['gtro_options'] ) ) {
-			$item->add_meta_data( __( 'Options', 'gtro-product-manager' ), implode( ', ', $values['gtro_options'] ) );
-		}
-	}
-
-	/**
 	 * Retrieves GTRO item data to display in the cart.
 	 *
 	 * This function adds metadata for vehicles, extra laps, date,
@@ -1126,10 +1091,10 @@ class GTRO_WooCommerce {
 	/**
 	 * Ajoute les métadonnées de l'élément du panier (GTRO) à la commande.
 	 *
-	 * @param WC_Order_Item $item          L'élément de la commande.
-	 * @param string        $cart_item_key La clé de l'élément du panier.
-	 * @param array         $values        Les valeurs du formulaire GTRO.
-	 * @param WC_Order      $order         La commande.
+	 * @param WC_Order_Item_Product $item          L'élément de la commande.
+	 * @param string                $cart_item_key La clé de l'élément du panier.
+	 * @param array                 $values        Les valeurs du formulaire GTRO.
+	 * @param WC_Order              $order         La commande (non utilisé mais requis par WooCommerce).
 	 */
 	public function checkout_create_order_line_item( $item, $cart_item_key, $values, $order ) {
 		if ( isset( $values['gtro_vehicle'] ) ) {

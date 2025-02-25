@@ -280,7 +280,7 @@ class GTRO_Calendar {
 
 		$year = isset( $_POST['year'] ) ? intval( $_POST['year'] ) : gmdate( 'Y' );
 
-		$dates = $this->get_all_dates( 'all', $year );
+		$dates    = $this->get_all_dates( 'all', $year );
 		$calendar = $this->generate_calendar( $dates, $year );
 
 		wp_send_json_success( $calendar );
@@ -305,7 +305,7 @@ class GTRO_Calendar {
 		$year = intval( $year );
 
 		// Récupérer les options une seule fois.
-		$settings = get_option( 'gtro_options' );
+		$settings    = get_option( 'gtro_options' );
 		$promo_color = ! empty( $settings['promo_color'] ) ? $settings['promo_color'] : '#FFD700';
 
 		foreach ( $this->date_groups as $group_key => $group_info ) {
