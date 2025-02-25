@@ -81,7 +81,10 @@ class GTRO_Settings {
 			return;
 		}
 
-		$nonce = wp_unslash( $_POST['gtro_new_group_nonce'] );
+		// Sanitize et unslash le nonce.
+		$nonce = sanitize_text_field( wp_unslash( $_POST['gtro_new_group_nonce'] ) );
+
+		// Vérification du nonce.
 		if ( ! wp_verify_nonce( $nonce, 'gtro_new_group_action' ) ) {
 			return;
 		}
@@ -325,16 +328,16 @@ class GTRO_Settings {
 				$slug = sanitize_title( $groupe );
 
 				$meta_boxes[] = array(
-					/* translators: %s: Nom du groupe de dates */
-					'title'          => sprintf( __( 'Dates %s', 'gtro-product-manager' ), $groupe ),
+					// translators: %s: Nom du groupe de dates.
+					'title'          => sprintf( esc_html__( 'Dates %s', 'gtro-product-manager' ), $groupe ),
 					'id'             => 'dates_' . $slug,
 					'settings_pages' => array( 'gtro' ),
 					'tab'            => 'dates',
 					// translators: %s: Groupe de dates.
 					'fields'         => array(
 						array(
-							/* translators: %s: Nom du groupe de dates */
-							'name'       => sprintf( __( 'Dates disponibles - %s', 'gtro-product-manager' ), $groupe ),
+							// translators: %s: Nom du groupe de dates.
+							'name'       => sprintf( esc_html__( 'Dates disponibles - %s', 'gtro-product-manager' ), $groupe ),
 							'id'         => 'dates_' . $slug,
 							'type'       => 'group',
 							'clone'      => true,

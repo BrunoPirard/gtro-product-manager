@@ -18,7 +18,6 @@ namespace GTRO_Plugin;
  */
 class GTRO_Deactivator {
 
-
 	/**
 	 * Actions à effectuer lors de la désactivation du plugin
 	 *
@@ -48,9 +47,20 @@ class GTRO_Deactivator {
 	 */
 	public static function restore_state() {
 		$saved_state = get_option( 'gtro_deactivation_state' );
-		if ( $saved_state ) {
-			// Restaurer les paramètres si nécessaire.
-			// Code de restauration ici.
+
+		// Si un état sauvegardé existe, restaurer les paramètres.
+		if ( ! empty( $saved_state ) && is_array( $saved_state ) ) {
+			// Restaurer les paramètres sauvegardés.
+			if ( isset( $saved_state['settings'] ) ) {
+				update_option( 'gtro_options', $saved_state['settings'] );
+			}
+
+			// Nettoyer l'état sauvegardé après restauration.
+			delete_option( 'gtro_deactivation_state' );
+
+			// Réinitialiser les caches si nécessaire.
+			delete_transient( 'gtro_cache_calendar' );
+			delete_transient( 'gtro_cache_dates' );
 		}
 	}
 }
