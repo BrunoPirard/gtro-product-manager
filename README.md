@@ -54,22 +54,15 @@ gtro-product-manager/
 ### Priorité Haute
 
 -   Validation des données côté serveur
--   Gestion des erreurs et messages utilisateur
--   Sécurisation des requêtes AJAX
--   Optimisation du calcul des prix
 
 ### Priorité Moyenne
 
 -   Interface d'administration plus intuitive
 -   Système de cache pour les calculs de prix
--   Gestion des conflits de réservation
--   Rapports et statistiques
 
 ### Priorité Basse
 
 -   Export/Import des configurations
--   Système de templates personnalisables
--   Intégration avec d'autres plugins
 
 ## Configuration actuelle
 
@@ -114,26 +107,6 @@ $gtroData = array(
 
 ## Bugs connus
 
-Problème potentiel avec l'affichage des prix si le format monétaire est modifié
-Les dates de promotion doivent être vérifiées pour le format
-
-## Prochaines étapes suggérées
-
-Implémenter un système de validation robuste
-Ajouter des hooks pour plus de flexibilité
-Créer une documentation utilisateur
-Optimiser les performances du calcul de prix
-Améliorer l'UX du formulaire de réservation
+-   Pas de variations
 
 ## Notes pour le développement
-
-Utiliser wp_localize_script pour passer les données au JS
-Suivre les standards WordPress pour le code
-Documenter toutes les fonctions et hooks
-
-Ce README servira de référence pour la suite du développement et permettra de maintenir une vision claire du projet.
-J'ai ajouté une section "Shortcodes disponibles" et amélioré le formatage général pour une meilleure lisibilité. Les listes sont maintenant correctement formatées avec des tirets, et j'ai ajouté des blocs de code avec la syntaxe appropriée.
-
-```
-
-```
