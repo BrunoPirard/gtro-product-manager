@@ -254,7 +254,7 @@ class GTRO_WooCommerce {
 			return;
 		}
 
-		$nonce = wp_unslash( $_POST['gtro_product_nonce'] );
+		$nonce = sanitize_text_field( wp_unslash( $_POST['gtro_product_nonce'] ) );
 		if ( ! wp_verify_nonce( $nonce, 'gtro_save_product_options' ) ) {
 			return;
 		}
@@ -796,7 +796,7 @@ class GTRO_WooCommerce {
 	public function add_gtro_options_to_cart( $cart_item_data, $product_id, $variation_id ) {
 
 		// Ajouter la vérification du nonce.
-		if ( ! isset( $_POST['gtro_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['gtro_nonce'] ), 'gtro_add_to_cart' ) ) {
+		if ( ! isset( $_POST['gtro_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gtro_nonce'] ) ), 'gtro_add_to_cart' ) ) {
 			return $cart_item_data;
 		}
 
@@ -876,7 +876,7 @@ class GTRO_WooCommerce {
 		}
 
 		// Vérifier le nonce.
-		if ( ! isset( $_POST['gtro_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['gtro_nonce'] ), 'gtro_add_to_cart' ) ) {
+		if ( ! isset( $_POST['gtro_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gtro_nonce'] ) ), 'gtro_add_to_cart' ) ) {
 			wc_add_notice( __( 'Erreur de sécurité', 'gtro-product-manager' ), 'error' );
 			return false;
 		}
