@@ -1045,25 +1045,34 @@ class GTRO_WooCommerce {
 	/**
 	 * Retrieves GTRO item data to display in the cart.
 	 *
-	 * This function adds metadata for vehicles, extra laps, date,
-	 * and additional options for GTRO products in the cart.
-	 * It formats vehicle names and options with the first letter
-	 * capitalized and compiles them into a readable string format.
-	 *
-	 * @param  array $item_data Existing item data in the cart.
-	 * @param  array $cart_item The cart item containing GTRO data.
+	 * @param array $item_data Existing item data in the cart.
+	 * @param array $cart_item The cart item containing GTRO data.
 	 * @return array Updated item data with GTRO metadata.
 	 */
 	public function get_item_data( $item_data, $cart_item ) {
 		if ( isset( $cart_item['gtro_vehicle'] ) ) {
-			$vehicles    = explode( ',', $cart_item['gtro_vehicle'] );
+			$vehicles = explode( ',', $cart_item['gtro_vehicle'] );
+			$formatted_vehicles = array();
+
+			// Récupérer les données des véhicules.
+			$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
+
+			foreach ( $vehicles as $vehicle_slug ) {
+				foreach ( $available_voitures as $voiture ) {
+					if ( sanitize_title( $voiture['modeles'] ) === $vehicle_slug ) {
+						$formatted_vehicles[] = $voiture['modeles'];
+						break;
+					}
+				}
+			}
+
 			$item_data[] = array(
 				'key'   => __( 'Véhicules', 'gtro-product-manager' ),
-				'value' => implode( ', ', array_map( 'ucfirst', $vehicles ) ),
+				'value' => implode( ', ', $formatted_vehicles ),
 			);
 		}
 
-		// Ajouter les autres données.
+		// Tours supplémentaires.
 		if ( isset( $cart_item['gtro_extra_laps'] ) && $cart_item['gtro_extra_laps'] > 0 ) {
 			$item_data[] = array(
 				'key'   => __( 'Tours supplémentaires', 'gtro-product-manager' ),
@@ -1071,17 +1080,32 @@ class GTRO_WooCommerce {
 			);
 		}
 
+		// Date.
 		if ( isset( $cart_item['gtro_date'] ) && ! empty( $cart_item['gtro_date'] ) ) {
+			$formatted_date = date_i18n( get_option( 'date_format' ), strtotime( $cart_item['gtro_date'] ) );
 			$item_data[] = array(
 				'key'   => __( 'Date', 'gtro-product-manager' ),
-				'value' => $cart_item['gtro_date'],
+				'value' => $formatted_date,
 			);
 		}
 
+		// Options.
 		if ( isset( $cart_item['gtro_options'] ) && ! empty( $cart_item['gtro_options'] ) ) {
+			$formatted_options = array();
+			$available_options = rwmb_meta( 'options_supplementaires', array( 'object_type' => 'setting' ), 'gtro_options' );
+
+			foreach ( $cart_item['gtro_options'] as $option_slug ) {
+				foreach ( $available_options as $option ) {
+					if ( sanitize_title( $option['options'] ) === $option_slug ) {
+						$formatted_options[] = $option['options'];
+						break;
+					}
+				}
+			}
+
 			$item_data[] = array(
 				'key'   => __( 'Options', 'gtro-product-manager' ),
-				'value' => implode( ', ', array_map( 'ucfirst', $cart_item['gtro_options'] ) ),
+				'value' => implode( ', ', $formatted_options ),
 			);
 		}
 
