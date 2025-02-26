@@ -378,6 +378,9 @@ class GTRO_WooCommerce {
 	 * @since 1.0.0
 	 */
 	public function display_gtro_options() {
+
+		wp_nonce_field( 'gtro_add_to_cart', 'gtro_nonce' );
+
 		global $product;
 
 		// Débuter le formulaire avec le nonce de sécurité.
@@ -653,77 +656,106 @@ class GTRO_WooCommerce {
 	 * @return float Le prix total.
 	 */
 	private function calculate_total_price( $base_price, $vehicle = '', $extra_laps = 0, $selected_date = '', $selected_options = array(), $formule_option = '', $product_id = 0 ) {
-		$total = $base_price;
+		// error_log( '=== DÉBUT calculate_total_price ===' );
 
-		// 1. Ajuster le prix en fonction du/des véhicules sélectionnés.
+		// 1. Prix de base
+		$total = floatval( $base_price );
+		// error_log( 'Prix de base: ' . $total );
+
+		// 2. Supplément véhicules
 		if ( ! empty( $vehicle ) ) {
-			$vehicles           = explode( ',', $vehicle );
-			$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
+			$vehicles            = explode( ',', $vehicle );
+			$available_voitures  = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
+			$vehicle_supplements = 0;
 
 			foreach ( $vehicles as $selected_vehicle ) {
 				foreach ( $available_voitures as $voiture ) {
 					if ( sanitize_title( $voiture['modeles'] ) === $selected_vehicle ) {
-						// Ajouter le supplément de base de la voiture.
 						if ( isset( $voiture['supplement_base'] ) ) {
-							$total += floatval( $voiture['supplement_base'] );
-						}
-						break;
-					}
-				}
-			}
-		}
-
-		// 2. Ajouter soit le prix des tours supplémentaires, soit le prix de la formule.
-		if ( ! empty( $formule_option ) ) {
-			// Si une formule est sélectionnée, ajouter son prix.
-			$formules = rwmb_meta( 'formules_list', array( 'object_type' => 'setting' ), 'gtro_options' );
-			foreach ( $formules as $formule ) {
-				if ( isset( $formule['options_formule'] ) ) {
-					foreach ( $formule['options_formule'] as $option ) {
-						if ( sanitize_title( $option['nom_option_formule'] ) === $formule_option ) {
-								$total += floatval( $option['prix_formule'] );
-								break 2;
+							$vehicle_supplements += floatval( $voiture['supplement_base'] );
+							// error_log( 'Ajout supplément véhicule: ' . $voiture['supplement_base'] );
 						}
 					}
 				}
 			}
-		} elseif ( $extra_laps > 0 ) {
-			// Sinon calculer le prix des tours supplémentaires.
-			$price_per_lap = get_option( 'gtro_price_per_lap', 50 );
-			$total        += ( $extra_laps * $price_per_lap );
+			$total += $vehicle_supplements;
+			// error_log( 'Total après suppléments véhicules: ' . $total );
 		}
 
-		// 3. Appliquer la promotion de la date si elle existe (sur le total incluant la formule).
-		if ( ! empty( $selected_date ) ) {
-			global $product;
-			if ( ! $product ) {
-				$product = wc_get_product( $product_id );
+		// 3. Tours supplémentaires
+		if ( $extra_laps > 0 ) {
+			$extra_laps_total = 0;
+			foreach ( $vehicles as $selected_vehicle ) {
+				foreach ( $available_voitures as $voiture ) {
+					if ( sanitize_title( $voiture['modeles'] ) === $selected_vehicle ) {
+						// Vérifier si la catégorie existe.
+						if ( isset( $voiture['categorie'] ) ) {
+							$category        = $voiture['categorie'];
+							$prix_categories = rwmb_meta( 'prix_categories', array( 'object_type' => 'setting' ), 'gtro_options' );
+							foreach ( $prix_categories as $cat ) {
+								if ( $cat['categorie'] === $category ) {
+									$price_per_lap     = floatval( $cat['prix_tour_sup'] );
+									$extra_laps_total += ( $extra_laps * $price_per_lap );
+									// error_log( 'Tours supplémentaires pour ' . $selected_vehicle . ': ' . ( $extra_laps * $price_per_lap ) );
+								}
+							}
+						}
+					}
+				}
 			}
+			$total += $extra_laps_total;
+			// error_log( 'Total après tours supplémentaires: ' . $total );
+		}
 
-			$selected_group = get_post_meta( $product->get_id(), '_gtro_date_group', true );
-			$dates          = rwmb_meta( 'dates_' . sanitize_title( $selected_group ), array( 'object_type' => 'setting' ), 'gtro_options' );
-
-			foreach ( $dates as $date ) {
-				if ( $date['date'] === $selected_date && isset( $date['promo'] ) && $date['promo'] > 0 ) {
-					$discount = $total * ( $date['promo'] / 100 );
-					$total   -= $discount;
+		// 4. Remise combo
+		$selected_combo = get_post_meta( $product_id, '_gtro_combo_promo', true );
+		if ( ! empty( $selected_combo ) ) {
+			$combos_list = rwmb_meta( 'combos_voitures', array( 'object_type' => 'setting' ), 'gtro_options' );
+			foreach ( $combos_list as $combo ) {
+				if ( isset( $combo['nom_promo_combo'] )
+					&& sanitize_title( $combo['nom_promo_combo'] ) === $selected_combo
+					&& isset( $combo['remise'] ) ) {
+					$discount_percentage = floatval( $combo['remise'] );
+					$discount_amount     = round( $total * ( $discount_percentage / 100 ), 2 );
+					$total               = round( $total - $discount_amount, 2 );
+					// error_log('Remise combo appliquée (' . $discount_percentage . '%): ' . $discount_amount);
+					// error_log('Total après remise combo: ' . $total);
 					break;
 				}
 			}
 		}
 
-		// 4. Ajouter le prix des options supplémentaires (après la promo).
+		// 5. Promotion date
+		if ( ! empty( $selected_date ) ) {
+			$selected_group = get_post_meta( $product_id, '_gtro_date_group', true );
+			$dates          = rwmb_meta( 'dates_' . sanitize_title( $selected_group ), array( 'object_type' => 'setting' ), 'gtro_options' );
+			foreach ( $dates as $date ) {
+				if ( $date['date'] === $selected_date && isset( $date['promo'] ) && $date['promo'] > 0 ) {
+					$promo_amount = round( $total * ( floatval( $date['promo'] ) / 100 ), 2 );
+					$total        = round( $total - $promo_amount, 2 );
+					// error_log( 'Promo date appliquée (' . $date['promo'] . '%): ' . $promo_amount );
+					// error_log( 'Total après promo date: ' . $total );
+					break;
+				}
+			}
+		}
+
+		// 6. Options supplémentaires
 		if ( ! empty( $selected_options ) ) {
 			$available_options = rwmb_meta( 'options_supplementaires', array( 'object_type' => 'setting' ), 'gtro_options' );
 			foreach ( $selected_options as $option_slug ) {
 				foreach ( $available_options as $option ) {
 					if ( sanitize_title( $option['options'] ) === $option_slug ) {
-						$total += floatval( $option['prix_options'] );
-						break;
+						$total = round( $total + floatval( $option['prix_options'] ), 2 );
+						// error_log( 'Ajout option ' . $option_slug . ': ' . $option['prix_options'] );
 					}
 				}
 			}
 		}
+
+		// 7. Arrondi final à l'euro supérieur (pas de décimales)
+		$total = ceil( $total );
+		// error_log('Prix final arrondi: ' . $total);
 
 		return $total;
 	}
@@ -782,73 +814,65 @@ class GTRO_WooCommerce {
 	}
 
 	/**
-	 * Ajoute les options GTRO au panier.
+	 * Ajoute les options supplémentaires du produit GTRO au panier.
 	 *
-	 * Récupère les données du formulaire et les ajoute au panier.
-	 * Calcule également le prix total du produit en fonction
-	 * de ces options.
+	 * Ce hook est déclenché lorsque le formulaire de commande d'un
+	 * produit GTRO est soumis. Il récupère les informations du formulaire,
+	 * calcule le prix total en prenant en compte les options et les
+	 * promotions, puis sauvegarde les données dans le panier.
 	 *
-	 * @param  array $cart_item_data Les données du produit dans le panier.
-	 * @param  int   $product_id     L'ID du produit.
-	 * @return array Les données du produit mises à jour.
+	 * @param array $cart_item_data Les données de l'élément du panier.
+	 * @param int   $product_id     L'ID du produit.
+	 * @param int   $variation_id   L'ID de la variation du produit.
+	 *
+	 * @return array Les données de l'élément du panier mise à jour.
 	 */
-	public function add_gtro_options_to_cart( $cart_item_data, $product_id ) {
+	public function add_gtro_options_to_cart( $cart_item_data, $product_id, $variation_id = 0 ) {
+		// error_log('=== DÉBUT add_gtro_options_to_cart ===');
+		// error_log('POST data: ' . print_r($_POST, true));
 
-		// Ajouter la vérification du nonce.
-		if ( ! isset( $_POST['gtro_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gtro_nonce'] ) ), 'gtro_add_to_cart' ) ) {
+		// Vérifier le nonce.
+		if ( ! isset( $_POST['gtro_nonce'] ) || ! wp_verify_nonce( $_POST['gtro_nonce'], 'gtro_add_to_cart' ) ) {
+			// error_log('Nonce invalide ou manquant');
 			return $cart_item_data;
 		}
 
-		// Vérifier que c'est un produit GTRO.
-		$date_group = get_post_meta( $product_id, '_gtro_date_group', true );
-		if ( empty( $date_group ) ) {
-			return $cart_item_data;
-		}
+		// Récupérer les données.
+		$vehicle          = isset( $_POST['gtro_vehicle'] ) ? sanitize_text_field( $_POST['gtro_vehicle'] ) : '';
+		$extra_laps       = isset( $_POST['gtro_extra_laps'] ) ? intval( $_POST['gtro_extra_laps'] ) : 0;
+		$selected_date    = isset( $_POST['gtro_date'] ) ? sanitize_text_field( $_POST['gtro_date'] ) : '';
+		$selected_options = isset( $_POST['gtro_options'] ) ? array_map( 'sanitize_text_field', $_POST['gtro_options'] ) : array();
 
-		// Sauvegarder le véhicule sélectionné.
-		if ( isset( $_POST['gtro_vehicle'] ) ) {
-			$cart_item_data['gtro_vehicle'] = sanitize_text_field( wp_unslash( $_POST['gtro_vehicle'] ) );
-		}
+		// error_log('Données reçues:');
+		// error_log('Vehicle: ' . $vehicle);
+		// error_log('Extra laps: ' . $extra_laps);
+		// error_log('Date: ' . $selected_date);
+		// error_log('Options: ' . print_r($selected_options, true));
 
-		// Sauvegarder la date sélectionnée.
-		if ( isset( $_POST['gtro_date'] ) ) {
-			$cart_item_data['gtro_date'] = sanitize_text_field( wp_unslash( $_POST['gtro_date'] ) );
-		}
-
-		// Sauvegarder les options sélectionnées.
-		if ( isset( $_POST['gtro_options'] ) && is_array( $_POST['gtro_options'] ) ) {
-			$cart_item_data['gtro_options'] = array_map( 'sanitize_text_field', wp_unslash( $_POST['gtro_options'] ) );
-		}
-
-		// Vérifier si c'est un produit avec tours supplémentaires ou formule.
-		$max_tours = intval( get_post_meta( $product_id, '_gtro_max_tours', true ) );
-
-		if ( $max_tours > 0 ) {
-			if ( isset( $_POST['gtro_extra_laps'] ) ) {
-				$cart_item_data['gtro_extra_laps'] = intval( $_POST['gtro_extra_laps'] );
-
-			}
-		} elseif ( isset( $_POST['gtro_formule_option'] ) ) {
-			$cart_item_data['gtro_formule_option'] = sanitize_text_field( wp_unslash( $_POST['gtro_formule_option'] ) );
-		}
-
-		// Calculer le nouveau prix.
-		$product = wc_get_product( $product_id );
-
-		$base_price = $product->get_price();
+		// Calculer le prix.
+		$product    = wc_get_product( $product_id );
+		$base_price = $product->get_regular_price();
 
 		$new_price = $this->calculate_total_price(
-			$base_price,
-			$cart_item_data['gtro_vehicle'] ?? '',
-			$cart_item_data['gtro_extra_laps'] ?? 0,
-			$cart_item_data['gtro_date'] ?? '',
-			$cart_item_data['gtro_options'] ?? array(), // Utiliser les options sauvegardées.
-			$cart_item_data['gtro_formule_option'] ?? '',
-			$product_id // Passez le product_id ici.
+			floatval( $base_price ),
+			$vehicle,
+			$extra_laps,
+			$selected_date,
+			$selected_options,
+			'',
+			$product_id
 		);
 
+		// error_log('Prix calculé: ' . $new_price);
+
+		// Sauvegarder les données.
+		$cart_item_data['gtro_vehicle']     = $vehicle;
+		$cart_item_data['gtro_date']        = $selected_date;
+		$cart_item_data['gtro_options']     = $selected_options;
+		$cart_item_data['gtro_extra_laps']  = $extra_laps;
 		$cart_item_data['gtro_total_price'] = $new_price;
 
+		// error_log('=== FIN add_gtro_options_to_cart ===');
 		return $cart_item_data;
 	}
 
@@ -1158,11 +1182,13 @@ class GTRO_WooCommerce {
 		$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
 		$vehicles_data      = array();
 		foreach ( $available_voitures as $voiture ) {
-			$vehicle_key                   = sanitize_title( $voiture['modeles'] );
-			$vehicles_data[ $vehicle_key ] = array(
-				'supplement_base' => isset( $voiture['supplement_base'] ) ? floatval( $voiture['supplement_base'] ) : 0,
-				'categorie'       => $voiture['categorie'],
-			);
+			if ( isset( $voiture['modeles'] ) && isset( $voiture['categorie'] ) ) {
+				$vehicle_key                   = sanitize_title( $voiture['modeles'] );
+				$vehicles_data[ $vehicle_key ] = array(
+					'supplement_base' => isset( $voiture['supplement_base'] ) ? floatval( $voiture['supplement_base'] ) : 0,
+					'categorie'       => $voiture['categorie'],
+				);
+			}
 		}
 
 		// Récupérer les prix par tours pour chaque catégorie.
