@@ -105,7 +105,6 @@ class GTRO_Settings {
 		}
 	}
 
-
 	/**
 	 * Register the settings page for GTRO.
 	 *

@@ -1,3 +1,13 @@
+.price-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 5px 15px 5px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 220px;
+    /* Hauteur fixe pour contenir toutes les lignes */
+}
 .vehicles-grid,
 .gtro-vehicle-selection,
 .gtro-laps-selection,
@@ -6,77 +16,52 @@
 .selected-vehicles-container{
     margin-bottom: 16px;
 }
-
 .gtro-vehicle-select {
     width: 100%;
     max-width: 300px;
     padding: 8px;
 }
-
 .gtro-option {
     margin-bottom: 10px;
 }
-
 .quantity input[name="gtro_extra_laps"] {
     width: 80px;
 }
-
 .base-price {
     margin-bottom: 2px;
 }
-
 .price-note {
     display: none;
 }
-
-.price-details {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 5px 15px 5px 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    height: auto;
-    min-height: 190px;
-    /* Hauteur fixe pour contenir toutes les lignes */
-}
-
 .price-details p {
     margin: 0;
     padding: 4px 0;
-    line-height: 1.5;
-    height: 18px;
+    line-height: 0.8;
     /* Hauteur fixe pour chaque ligne */
 }
-
 .price-details .total {
     margin-top: 15px;
     padding-top: 10px;
     border-top: 1px solid #ddd;
     font-size: 1.1em;
 }
-
 .gtro-price-details {
     position: relative;
     height: auto;
     margin-bottom: 30px;
 }
-
 .gtro-total-price {
     display: none;
 }
-
 .price-details .promo.invisible {
     visibility: hidden;
     height: 28px;
 }
-
 .vehicles-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
-
 .vehicle-card {
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -85,18 +70,15 @@
     cursor: pointer;
     transition: all 0.3s ease;
 }
-
 .vehicle-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
-
 .vehicle-card.selected {
     border: 2px solid;
     border-color: #007bff;
     background-color: rgba(0, 123, 255, 0.05);
 }
-
 .vehicle-card img {
     width: 100%;
     height: auto;
@@ -105,13 +87,11 @@
     object-fit: cover;
     aspect-ratio: 16/9;
 }
-
 .vehicle-card h4 {
     margin: 0;
     font-size: 16px;
     color: #333;
 }
-
 .remove-vehicle {
     padding-left: 4px;
     padding-right: 4px;
@@ -121,19 +101,16 @@
     background-color: rgba(0, 123, 255, 0.25);
     color: white;
 }
-
 /* Optionnel : effet au survol */
 .remove-vehicle:hover {
     background-color: #EA661C;
 }
-
 /* Responsive */
 @media (max-width: 768px) {
     .vehicles-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
-
 @media (max-width: 480px) {
     .vehicles-grid {
         grid-template-columns: 1fr;

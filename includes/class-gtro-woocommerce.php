@@ -99,7 +99,7 @@ class GTRO_WooCommerce {
 	public function add_gtro_product_panel() {
 
 		// Ajouter le nonce au début du formulaire.
-    	wp_nonce_field( 'gtro_save_product_options', 'gtro_product_nonce' );
+		wp_nonce_field( 'gtro_save_product_options', 'gtro_product_nonce' );
 
 		global $post;
 		?>
@@ -251,57 +251,57 @@ class GTRO_WooCommerce {
 	 * @param int $post_id L'ID du produit.
 	 * @return void
 	 */
-	public function save_gtro_product_options($post_id) {
-		//error_log( '=== Début save_gtro_product_options ===' );
-		//error_log( 'Post ID: ' . $post_id );
+	public function save_gtro_product_options( $post_id ) {
+		// error_log( '=== Début save_gtro_product_options ===' );
+		// error_log( 'Post ID: ' . $post_id );
 
 		// Vérification de l'autosave.
-		if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
-			//error_log('Autosave détecté - abandon');
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			// error_log( 'Autosave détecté - abandon' );
 			return;
 		}
 
 		// Vérification du type de post.
-		if ( ! isset( $_POST['post_type'] ) || 'product' !== $_POST['post_type']) {
-			//error_log( 'Post type incorrect - abandon' );
+		if ( ! isset( $_POST['post_type'] ) || 'product' !== $_POST['post_type'] ) {
+			// error_log( 'Post type incorrect - abandon' );
 			return;
 		}
 
 		// Vérification des permissions.
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
-			//error_log( 'Permissions insuffisantes - abandon' );
+			// error_log( 'Permissions insuffisantes - abandon' );
 			return;
 		}
 
 		// Ajout du nonce.
 		if ( ! isset( $_POST['gtro_product_nonce'] ) ) {
-			//error_log( 'Nonce manquant - abandon' );
+			// error_log( 'Nonce manquant - abandon' );
 			return;
 		}
 
-		if ( !wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gtro_product_nonce'] ) ), 'gtro_save_product_options') ) {
-			//error_log('Vérification du nonce échouée - abandon');
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gtro_product_nonce'] ) ), 'gtro_save_product_options' ) ) {
+			// error_log('Vérification du nonce échouée - abandon');
 			return;
 		}
 
-		//error_log( 'POST data: ' . print_r( $_POST, true ) );
+		// error_log( 'POST data: ' . print_r( $_POST, true ) );
 
 		// Sauvegarde du type de sélection des véhicules.
 		if ( isset( $_POST['_gtro_vehicle_selection_type'] ) ) {
 			$vehicle_type = sanitize_text_field( wp_unslash( $_POST['_gtro_vehicle_selection_type'] ) );
 			update_post_meta( $post_id, '_gtro_vehicle_selection_type', $vehicle_type );
-			//error_log("Type de sélection des véhicules sauvegardé: $vehicle_type");
+			// error_log("Type de sélection des véhicules sauvegardé: $vehicle_type");
 		}
 
 		// Sauvegarde des voitures.
-		$available_voitures = rwmb_meta( 'voitures_gtro', array('object_type' => 'setting'), 'gtro_options' );
+		$available_voitures = rwmb_meta( 'voitures_gtro', array( 'object_type' => 'setting' ), 'gtro_options' );
 		if ( ! empty( $available_voitures ) ) {
 			foreach ( $available_voitures as $voiture ) {
 				if ( isset( $voiture['modeles'] ) ) {
 					$voiture_id = '_gtro_voiture_' . sanitize_title( $voiture['modeles'] );
-					$value = isset( $_POST[$voiture_id] ) ? 'yes' : 'no';
+					$value = isset( $_POST[ $voiture_id ] ) ? 'yes' : 'no';
 					update_post_meta( $post_id, $voiture_id, $value );
-					//error_log("Voiture $voiture_id sauvegardée: $value");
+					// error_log("Voiture $voiture_id sauvegardée: $value");
 				}
 			}
 		}
@@ -309,33 +309,33 @@ class GTRO_WooCommerce {
 		// Sauvegarde du groupe de dates.
 		if ( isset( $_POST['_gtro_date_group'] ) ) {
 			$date_group = sanitize_text_field( wp_unslash( $_POST['_gtro_date_group'] ) );
-			update_post_meta($post_id, '_gtro_date_group', $date_group);
-			//error_log("Groupe de dates sauvegardé: $date_group");
+			update_post_meta( $post_id, '_gtro_date_group', $date_group );
+			// error_log("Groupe de dates sauvegardé: $date_group");
 		}
 
 		// Sauvegarde du nombre maximum de tours.
 		if ( isset( $_POST['_gtro_max_tours'] ) ) {
 			$max_tours = absint( wp_unslash( $_POST['_gtro_max_tours'] ) );
 			update_post_meta( $post_id, '_gtro_max_tours', $max_tours );
-			//error_log("Nombre maximum de tours sauvegardé: $max_tours");
+			// error_log("Nombre maximum de tours sauvegardé: $max_tours");
 		}
 
 		// Sauvegarde de la formule.
 		if ( isset( $_POST['_gtro_formule'] ) ) {
 			$formule = sanitize_text_field( wp_unslash( $_POST['_gtro_formule'] ) );
 			update_post_meta( $post_id, '_gtro_formule', $formule );
-			//error_log("Formule sauvegardée: $formule");
+			// error_log("Formule sauvegardée: $formule");
 		}
 
 		// Sauvegarde des options supplémentaires.
-		$available_options = rwmb_meta( 'options_supplementaires', array('object_type' => 'setting'), 'gtro_options' );
+		$available_options = rwmb_meta( 'options_supplementaires', array( 'object_type' => 'setting' ), 'gtro_options' );
 		if ( ! empty( $available_options ) ) {
 			foreach ( $available_options as $option ) {
 				if ( isset( $option['options'] ) ) {
 					$option_id = '_gtro_option_' . sanitize_title( $option['options'] );
-					$value = isset( $_POST[$option_id] ) ? 'yes' : 'no';
+					$value = isset( $_POST[ $option_id ] ) ? 'yes' : 'no';
 					update_post_meta( $post_id, $option_id, $value );
-					//error_log("Option $option_id sauvegardée: $value");
+					// error_log("Option $option_id sauvegardée: $value");
 				}
 			}
 		}
@@ -344,10 +344,10 @@ class GTRO_WooCommerce {
 		if ( isset( $_POST['_gtro_combo_promo'] ) ) {
 			$combo_promo = sanitize_text_field( wp_unslash( $_POST['_gtro_combo_promo'] ) );
 			update_post_meta( $post_id, '_gtro_combo_promo', $combo_promo );
-			//error_log("Promo combo sauvegardée: $combo_promo");
+			// error_log("Promo combo sauvegardée: $combo_promo");
 		}
 
-		//error_log('=== Fin save_gtro_product_options ===');
+		// error_log('=== Fin save_gtro_product_options ==='); ?
 	}
 
 	/**
@@ -503,7 +503,7 @@ class GTRO_WooCommerce {
 		if ( $max_tours > 0 ) {
 			echo '<div class="gtro-extra-laps">';
 			echo '<h3>' . esc_html__( 'Tours supplémentaires', 'gtro-product-manager' ) . '</h3>';
-			echo '<input type="number" name="gtro_extra_laps" value="0" min="0" max="' . esc_attr( $max_tours ) . '">';
+			echo '<input class="numberstyle" type="number" name="gtro_extra_laps" value="0" min="0" max="' . esc_attr( $max_tours ) . '">';
 			echo '</div>';
 		} else {
 			$selected_formule = get_post_meta( $product->get_id(), '_gtro_formule', true );
