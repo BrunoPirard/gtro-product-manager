@@ -1,4 +1,42 @@
 jQuery(document).ready(function ($) {
+    // Gestionnaire pour les boutons + et -
+    $(".input-number-container").each(function () {
+        var $input = $(this).find(".input-number");
+        var min = parseInt($input.attr("min"));
+        var max = parseInt($input.attr("max"));
+
+        $(this)
+            .find(".input-number-decrement")
+            .on("click", function () {
+                var value = parseInt($input.val());
+                if (value > min) {
+                    $input.val(value - 1).trigger("change");
+                    updatePrice(); // Déclencher la mise à jour du prix
+                }
+            });
+
+        $(this)
+            .find(".input-number-increment")
+            .on("click", function () {
+                var value = parseInt($input.val());
+                if (value < max) {
+                    $input.val(value + 1).trigger("change");
+                    updatePrice(); // Déclencher la mise à jour du prix
+                }
+            });
+
+        // Empêcher la saisie manuelle de valeurs invalides
+        $input.on("input", function () {
+            var value = parseInt($(this).val());
+            if (isNaN(value)) {
+                $(this).val(0);
+            } else if (value < min) {
+                $(this).val(min);
+            } else if (value > max) {
+                $(this).val(max);
+            }
+        });
+    });
     console.log("GTRO Data loaded:", gtroData);
     console.log("Max Tours:", gtroData.maxTours);
 

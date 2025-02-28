@@ -503,7 +503,11 @@ class GTRO_WooCommerce {
 		if ( $max_tours > 0 ) {
 			echo '<div class="gtro-extra-laps">';
 			echo '<h3>' . esc_html__( 'Tours supplémentaires', 'gtro-product-manager' ) . '</h3>';
-			echo '<input class="numberstyle" type="number" name="gtro_extra_laps" value="0" min="0" max="' . esc_attr( $max_tours ) . '">';
+			echo '<div class="input-number-container">';
+			echo '<button type="button" class="input-number-decrement">-</button>';
+			echo '<input class="input-number" type="number" name="gtro_extra_laps" value="0" min="0" max="' . esc_attr( $max_tours ) . '">';
+			echo '<button type="button" class="input-number-increment">+</button>';
+			echo '</div>';
 			echo '</div>';
 		} else {
 			$selected_formule = get_post_meta( $product->get_id(), '_gtro_formule', true );

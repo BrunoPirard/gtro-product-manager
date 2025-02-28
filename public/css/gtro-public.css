@@ -116,3 +116,45 @@
         grid-template-columns: 1fr;
     }
 }
+
+.input-number-container .input-number::-webkit-inner-spin-button,
+.input-number-container .input-number::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.input-number-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 280px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.input-number-container button:hover {
+    background: #eee;
+}
+
+.input-number,
+.input-number-decrement,
+.input-number-increment {
+    border: 1px solid var(--border-primary);
+    height: 40px;
+    user-select: none;
+    text-align: center;
+    padding: 8px;
+    margin: 0;
+    -moz-appearance: textfield;
+}
+
+.input-number-decrement,
+.input-number-increment {
+    width: 45px;
+    font-weight: bold;
+    cursor: pointer;
+}
